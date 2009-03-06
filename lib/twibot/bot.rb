@@ -9,75 +9,58 @@ module Twibot
   # Main bot "controller" class
   #
   class Bot
-    attr_reader :login
-
-    def initialize
-      @log = Logger.new $stdout
-      conf = { :bot => {} }.merge(config)
-
-      @config = {
-        :min_interval => 5,
-        :max_interval => 300,
-        :interval_step => 5
-      }.merge(conf[:bot])
-
-      @twitter = Twitter::Client.new(conf[:twitter])
-      @login = conf[:twitter][:login]
-    end
-
-    #
-    # Get configuration hash
-    #
-    def config
-      return @config if @config
-
-      begin
-        config = YAML.load(File.read(File.expand_path("config/bot.yml")))
-      rescue Exception => err
-        puts err.message
-        puts "Unable to load configuration, aborting"
-        exit
-      end
-
-      config.symbolize_keys!
-    end
-
-    #
-    # Run bot
-    #
-    def run
-      min_interval = interval = @config[:min_interval]
-      max_interval = @config[:max_interval]
-      step = @config[:interval_step]
-
-      loop do
-        # TODO: Poll twitter service
-        sleep interval
-        interval = interval + step < max_interval ? interval + step : max_interval
-      end
+    def initialize(config = nil)
+      config = Twibot::FileConfig.new << Twibot::CliConfig.new if config.nil?
+      @config = config.to_hash
+      @twitter = Twitter::Client.new :login => @config[:login], :password => @config[:password]
+    rescue Exception => krash
+      puts krash.message
+      exit
     end
 
     #
     # Run application
     #
-    def self.run!
-      bot = Twibot::Bot.new
-      puts "Twibot assuming the role of @#{bot.login}"
+    def run!
+      puts "Twibot #{Twibot::VERSION} imposing as @#{login}"
 
       trap(:INT) do
         puts "\nAnd it's a wrap. See ya soon!"
         exit
       end
 
-      bot.run
+      poll
+    end
+
+    #
+    # Poll Twitter API in a loop and pass on messages and tweets when they appear
+    #
+    def poll
+      interval = min_interval
+      max = max_interval
+      step = interval_step
+
+      loop do
+        # TODO: Poll twitter service
+        log.debug "Sleeping for #{interval}s"
+        sleep interval
+        interval = interval + step < max ? interval + step : max
+      end
+    end
+
+   private
+    def method_missing(name, *args, &block)
+      return super unless @config.key?(name)
+      self.class.send(:define_method, name) { @config[name] }
+      @config[name]
+    end
+
+    def log
+      return @log if @log
+      os = @config[:log_file] ? File.open(@config[:log_file], "r") : $stdio
+      @log = Logger.new(os)
+      @log.level = Logger.const_get(@config[:log_level] ? @config[:log_level].upcase : "INFO")
+      @log
     end
   end
-end
-
-#
-# Sinatra inspired code to fire off application
-#
-at_exit do
-  raise $! if $!
-  Twibot::Bot.run! if Twibot.run?
 end

@@ -9,9 +9,8 @@ module Twibot
   # Main bot "controller" class
   #
   class Bot
-    def initialize(config = nil)
-      config = Twibot::FileConfig.new << Twibot::CliConfig.new if config.nil?
-      @config = config.to_hash
+    def initialize(options = nil)
+      @config = (options || Twibot::FileConfig.new << Twibot::CliConfig.new).to_hash
       @twitter = Twitter::Client.new :login => @config[:login], :password => @config[:password]
     rescue Exception => krash
       puts krash.message

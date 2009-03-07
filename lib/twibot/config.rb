@@ -17,6 +17,8 @@ module Twibot
   # when running the bot.
   #
   class Config
+    attr_reader :settings
+
     DEFAULT = {
       :min_interval => 5,
       :max_interval => 300,
@@ -27,9 +29,9 @@ module Twibot
       :password => nil
     }
 
-    def initialize
+    def initialize(settings = {})
       @configs = []
-      @settings = {}.merge(Config::DEFAULT)
+      @settings = settings
     end
 
     def add(config)
@@ -40,14 +42,25 @@ module Twibot
     alias_method :<<, :add
 
     def method_missing(name, *args, &block)
-      return super unless @settings.key?(name)
-      @settings[name] = args.first
+      regex = /=$/
+      attr_name = name.to_s.sub(regex, '').to_sym
+      return super if name == attr_name && !@settings.key?(attr_name)
+
+      if name != attr_name
+        @settings[attr_name] = args.first
+      end
+
+      @settings[attr_name]
     end
 
     def to_hash
       hash = {}.merge(@settings)
       @configs.each { |conf| hash.merge!(conf.to_hash) }
       hash
+    end
+
+    def self.default
+      Config.new(DEFAULT)
     end
   end
 
@@ -56,8 +69,9 @@ module Twibot
   #
   class CliConfig < Config
 
-    def initialize
-      super
+    def initialize(args = $*)
+      @args = args
+      super()
 
       @parser = OptionParser.new do |opts|
         opts.banner += "Usage: #{File.basename(Twibot.app_file)} [options]"
@@ -74,7 +88,7 @@ module Twibot
     end
 
     def to_hash
-      @parser.parse!
+      @parser.parse!(@args)
       super
     end
   end

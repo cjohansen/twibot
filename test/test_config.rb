@@ -1,3 +1,4 @@
+require 'stringio'
 require File.join(File.dirname(__FILE__), 'test_helper')
 
 class TestConfig < Test::Unit::TestCase
@@ -32,9 +33,20 @@ class TestConfig < Test::Unit::TestCase
     assert_equal Twibot::Config::DEFAULT[:min_interval], config.min_interval
 
     val = config.min_interval
-    config.min_interval= val + 5
+    config.min_interval = val + 5
     assert_not_equal Twibot::Config::DEFAULT[:min_interval], config.min_interval
     assert_equal val + 5, config.min_interval
+  end
+
+  test "default configuration should not override default hash" do
+    config = Twibot::Config.default
+    hash = Twibot::Config::DEFAULT
+
+    config.min_interval = 0
+    config.max_interval = 0
+
+    assert_hashes_not_equal Twibot::Config::DEFAULT, config.to_hash
+    assert_hashes_equal hash, Twibot::Config::DEFAULT
   end
 
   test "to_hash should return merged configuration" do
@@ -49,5 +61,29 @@ class TestConfig < Test::Unit::TestCase
 
     assert_equal 10, options[:max_interval]
     assert_equal 1, options[:min_interval]
+  end
+end
+
+class TestCliConfig < Test::Unit::TestCase
+  test "should configure from options" do
+    config = Twibot::CliConfig.new %w{--min-interval 10 --max-interval 15}
+    assert_equal 10, config.min_interval
+    assert_equal 15, config.max_interval
+  end
+end
+
+class TestFileConfig < Test::Unit::TestCase
+  test "file config should subclass config" do
+    assert Twibot::FileConfig.new(StringIO.new).is_a?(Twibot::Config)
+  end
+
+  test "should read settings from stream" do
+    config = Twibot::FileConfig.new(StringIO.new <<-YAML)
+min_interval: 10
+max_interval: 20
+    YAML
+
+    assert_equal 10, config.min_interval
+    assert_equal 20, config.max_interval
   end
 end

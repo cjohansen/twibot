@@ -13,4 +13,15 @@ EOT
       expected.keys.all? { |k| expected[k] == actual[k] }
     end
   end
+
+  def assert_hashes_not_equal(expected, actual, message = nil)
+    full_message = build_message(message, <<EOT, expected.inspect, actual.inspect)
+<?> expected but was
+<?>.
+EOT
+    assert_block(full_message) do
+      break false if expected.keys.length != actual.keys.length
+      expected.keys.any? { |k| expected[k] != actual[k] }
+    end
+  end
 end

@@ -34,6 +34,9 @@ module Twibot
       @settings = settings
     end
 
+    #
+    # Add a configuration object to override given settings
+    #
     def add(config)
       @configs << config
       self
@@ -41,6 +44,9 @@ module Twibot
 
     alias_method :<<, :add
 
+    #
+    # Makes it possible to access configuration settings as attributes
+    #
     def method_missing(name, *args, &block)
       regex = /=$/
       attr_name = name.to_s.sub(regex, '').to_sym
@@ -53,6 +59,9 @@ module Twibot
       @settings[attr_name]
     end
 
+    #
+    # Merges configurations and returns a hash with all options
+    #
     def to_hash
       hash = {}.merge(@settings)
       @configs.each { |conf| hash.merge!(conf.to_hash) }
@@ -60,7 +69,7 @@ module Twibot
     end
 
     def self.default
-      Config.new(DEFAULT)
+      Config.new({}.merge(DEFAULT))
     end
   end
 
@@ -70,7 +79,6 @@ module Twibot
   class CliConfig < Config
 
     def initialize(args = $*)
-      @args = args
       super()
 
       @parser = OptionParser.new do |opts|
@@ -84,12 +92,7 @@ module Twibot
         opts.on("-u", "--login LOGIN", "Twitter login") { |l| login l }
         opts.on("-p", "--password PASSWORD", "Twitter password") { |p| password p }
         opts.on("-h", "--help", "Show this message") { puts opts; exit }
-      end
-    end
-
-    def to_hash
-      @parser.parse!(@args)
-      super
+      end.parse!
     end
   end
 
@@ -98,18 +101,27 @@ module Twibot
   #
   class FileConfig < Config
 
-    def initialize
-      super
+    #
+    # Accepts a stream or a file to read configuration from
+    # Default is to read configuration from ./config/bot.yml
+    #
+    # If a stream is passed it is not closed from within the method
+    #
+    def initialize(fos = File.expand_path("config/bot.yml"))
+      stream = fos.is_a?(String) ? File.open(fos, "r") : fos
 
       begin
-        config = YAML.load(File.read(File.expand_path("config/bot.yml")))
+        config = YAML.load(stream.read)
+        config.symbolize_keys! if config
       rescue Exception => err
         puts err.message
         puts "Unable to load configuration, aborting"
         exit
+      ensure
+        stream.close if fos.is_a?(String)
       end
 
-      @settings.merge!(config.symbolize_keys!)
+      super config.is_a?(Hash) ? config : {}
     end
   end
 end

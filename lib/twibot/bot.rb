@@ -3,6 +3,7 @@ require 'twitter'
 require 'twitter/console'
 require 'yaml'
 require 'logger'
+require File.join(File.dirname(__FILE__), 'macros')
 
 module Twibot
   #
@@ -10,11 +11,11 @@ module Twibot
   #
   class Bot
     def initialize(options = nil)
-      @config = (options || Twibot::FileConfig.new << Twibot::CliConfig.new).to_hash
-      @twitter = Twitter::Client.new :login => @config[:login], :password => @config[:password]
+      @config = options || Twibot::Config.default << Twibot::FileConfig.new << Twibot::CliConfig.new
+      @twitter = Twitter::Client.new :login => config[:login], :password => config[:password]
+      @log = nil
     rescue Exception => krash
-      puts krash.message
-      exit
+      raise SystemExit.new krash.message
     end
 
     #
@@ -47,19 +48,48 @@ module Twibot
       end
     end
 
-   private
-    def method_missing(name, *args, &block)
-      return super unless @config.key?(name)
-      self.class.send(:define_method, name) { @config[name] }
-      @config[name]
-    end
-
+    #
+    # Return logger instance
+    #
     def log
       return @log if @log
-      os = @config[:log_file] ? File.open(@config[:log_file], "r") : $stdio
+      os = config[:log_file] ? File.open(config[:log_file], "r") : $stdout
       @log = Logger.new(os)
-      @log.level = Logger.const_get(@config[:log_level] ? @config[:log_level].upcase : "INFO")
+      @log.level = Logger.const_get(config[:log_level] ? config[:log_level].upcase : "INFO")
       @log
     end
+
+    #
+    # Configure bot
+    #
+    def configure
+      yield @config
+    end
+
+   private
+    #
+    # Map configuration settings
+    #
+    def method_missing(name, *args, &block)
+      return super unless config.key?(name)
+      self.class.send(:define_method, name) { config[name] }
+      config[name]
+    end
+
+    #
+    # Return configuration
+    #
+    def config
+      @config.to_hash
+    end
   end
+end
+
+# Expose DSL
+include Twibot::Macros
+
+# Run bot if macros has been used
+at_exit do
+  raise $! if $!
+  @@bot.run! if run?
 end

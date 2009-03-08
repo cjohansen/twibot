@@ -84,15 +84,15 @@ module Twibot
       @parser = OptionParser.new do |opts|
         opts.banner += "Usage: #{File.basename(Twibot.app_file)} [options]"
 
-        opts.on("-m", "--min-interval SECS", Integer, "Minimum poll interval in seconds") { |i| min_interval i }
-        opts.on("-x", "--max-interval SECS", Integer, "Maximum poll interval in seconds") { |i| max_interval i }
-        opts.on("-s", "--interval-step SECS", Integer, "Poll interval step in seconds") { |i| interval_step i }
-        opts.on("-f", "--log-file FILE", "Log file") { |f| log_file f }
-        opts.on("-l", "--log-level LEVEL", "Log level (err, warn, info, debug), default id info") { |l| log_level l }
-        opts.on("-u", "--login LOGIN", "Twitter login") { |l| login l }
-        opts.on("-p", "--password PASSWORD", "Twitter password") { |p| password p }
+        opts.on("-m", "--min-interval SECS", Integer, "Minimum poll interval in seconds") { |i| @settings[:min_interval] = i }
+        opts.on("-x", "--max-interval SECS", Integer, "Maximum poll interval in seconds") { |i| @settings[:max_interval] =  i }
+        opts.on("-s", "--interval-step SECS", Integer, "Poll interval step in seconds") { |i| @settings[:interval_step] =  i }
+        opts.on("-f", "--log-file FILE", "Log file") { |f| @settings[:log_file] =  f }
+        opts.on("-l", "--log-level LEVEL", "Log level (err, warn, info, debug), default id info") { |l| @settings[:log_level] =  l }
+        opts.on("-u", "--login LOGIN", "Twitter login") { |l| @settings[:login] =  l }
+        opts.on("-p", "--password PASSWORD", "Twitter password") { |p| @settings[:password] =  p }
         opts.on("-h", "--help", "Show this message") { puts opts; exit }
-      end.parse!
+      end.parse!(args)
     end
   end
 

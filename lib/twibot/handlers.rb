@@ -30,8 +30,8 @@ module Twibot
   class Handler
     def initialize(pattern = nil, options = {}, &blk)
       @options = options
-      @handler = block_given? ? &blk : nil
-      @params = {}
+      @handler = nil
+      @handler = block_given? ? blk : nil
       self.pattern = pattern
     end
 
@@ -41,34 +41,48 @@ module Twibot
     def pattern=(pattern)
       return if pattern.nil? || pattern == ""
 
-      words = pattern.split.collect { |s| s.strip }         # Get all words in pattern
-      @options[:tokens] = words.inject([]) do |token, sum|  # Find all tokens, ie :symbol :like :names
-        break sum unless token =~ /^:.*/                    # Don't process regular words
-        pattern.sub!(/\b#{token}\b/, '([^\s])')             # Make sure regex captures named switch
+      words = pattern.split.collect { |s| s.strip }          # Get all words in pattern
+      @options[:tokens] = words.inject([]) do |sum, token|   # Find all tokens, ie :symbol :like :names
+        next sum unless token =~ /^:.*/                      # Don't process regular words
+        pattern.sub!(/(^|\s)#{token}(\s|$)/, '\1([^\s]+)\2') # Make sure regex captures named switch
         sum << token.sub(":", "").to_sym
+        sum
       end
 
-      @options[:pattern] = pattern
+      @options[:pattern] = /#{pattern}(\s.+)?/
     end
 
+    #
+    # Determines if this handler is suited to handle an incoming message
+    #
     def recognize?(message)
       return false if @options[:pattern] && message !~ @options[:pattern] # Pattern check
 
       users = @options[:from] ? @options[:from] : nil
       users = [users] if users.is_a?(String)
-      return false if users && users.include?(mesage.from)                # Check allowed senders
-
-      matches = message.match(@options[:pattern])
-      @options[:tokens].each_with_index { |token, i| @params[token] = matches[i] }
+      return false if users && users.include?(message.from)               # Check allowed senders
     end
 
+    #
+    # Process message to build params hash and pass message along with params of
+    # to +handle+
+    #
     def dispatch(message)
       @params = {}
-      handle(message) if recognize?(message)
+
+      matches = message.match(@options[:pattern])
+      @options[:tokens].each_with_index { |token, i| @params[token] = matches[i+1] }
+      @params[:text] = (matches[tokens.length+1] || "").strip
+
+      handle(message, @params) if recognize?(message)
     end
 
-    def handle(message)
-      @handler.call(message) if @handler
+    #
+    # Handle a message. Calls the internal Proc with the message and the params
+    # hash as parameters.
+    #
+    def handle(message, params)
+      @handler.call(message, params) if @handler
     end
   end
 end

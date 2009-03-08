@@ -39,4 +39,13 @@ class TestHandler < Test::Unit::TestCase
     assert_equal :command, handler.instance_eval { @options[:tokens].first }
     assert_equal :subcommand, handler.instance_eval { @options[:tokens][1] }
   end
+
+  test "pattern writer should convert several named switches to regexen specified by options" do
+    handler = Twibot::Handler.new(":time :hour", :hour => /\d\d/)
+
+    assert_equal(/([^\s]+) ((?-mix:\d\d))(\s.+)?/, handler.instance_eval { @options[:pattern] })
+    assert_equal 2, handler.instance_eval { @options[:tokens] }.length
+    assert_equal :time, handler.instance_eval { @options[:tokens].first }
+    assert_equal :hour, handler.instance_eval { @options[:tokens][1] }
+  end
 end

@@ -44,9 +44,10 @@ module Twibot
       words = pattern.split.collect { |s| s.strip }          # Get all words in pattern
       @options[:tokens] = words.inject([]) do |sum, token|   # Find all tokens, ie :symbol :like :names
         next sum unless token =~ /^:.*/                      # Don't process regular words
-        pattern.sub!(/(^|\s)#{token}(\s|$)/, '\1([^\s]+)\2') # Make sure regex captures named switch
-        sum << token.sub(":", "").to_sym
-        sum
+        sym = token.sub(":", "").to_sym                      # Turn token string into symbol, ie ":token" => :token
+        regex = @options[sym] || '[^\s]+'                    # Fetch regex if configured, else use any character but space matching
+        pattern.sub!(/(^|\s)#{token}(\s|$)/, '\1(' + regex.to_s + ')\2') # Make sure regex captures named switch
+        sum << sym
       end
 
       @options[:pattern] = /#{pattern}(\s.+)?/

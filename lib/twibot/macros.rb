@@ -9,15 +9,15 @@ module Twibot
     end
 
     def message(pattern = nil, options = {}, &blk)
-      bot.add_handler(:message, Twibot::Handler.new(pattern, options, &blk))
+      add_handler(:message, pattern, options, &blk)
     end
 
     def reply(pattern = nil, options = {}, &blk)
-      bot.add_handler(:reply, Twibot::Handler.new(pattern, options, &blk))
+      add_handler(:reply, pattern, options, &blk)
     end
 
     def tweet(pattern = nil, options = {}, &blk)
-      bot.add_handler(:tweet, Twibot::Handler.new(pattern, options, &blk))
+      add_handler(:tweet, pattern, options, &blk)
     end
 
     def run?
@@ -25,6 +25,15 @@ module Twibot
     end
 
    private
+    def add_handler(type, pattern, options, &blk)
+      if pattern.is_a?(Hash)
+        options = pattern
+        pattern = nil
+      end
+
+      bot.add_handler(type, Twibot::Handler.new(pattern, options, &blk))
+    end
+
     def bot
       @@bot ||= Twibot::Bot.new
     end

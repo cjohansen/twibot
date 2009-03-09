@@ -1,25 +1,27 @@
 module Twibot
   module Handlers
-    #
-    # Sets up handler arrays
-    #
-    def includled
-      @handlers = {
-        :message => [],
-        :reply => [],
-        :tweet => []
-      }
-    end
+    attr_reader :handlers
 
     #
     # Add a handler for this bot
     #
     def add_handler(type, handler)
+      init_handlers
       @handlers[type] << handler
     end
 
     def dispatch(type, message)
+      init_handlers
       @handlers[type].each { |handler| handler.dispatch(message) }
+    end
+
+   private
+    def init_handlers
+      @handlers ||= {
+        :message => [],
+        :reply => [],
+        :tweet => []
+      }
     end
   end
 
@@ -30,6 +32,8 @@ module Twibot
   class Handler
     def initialize(pattern = nil, options = {}, &blk)
       @options = options
+      @options[:from].collect! { |s| s.to_s } if @options[:from] && @options[:from].is_a?(Array)
+      @options[:from] = [@options[:from].to_s] if @options[:from] && @options[:from].is_a?(String)
       @handler = nil
       @handler = block_given? ? blk : nil
       self.pattern = pattern
@@ -60,8 +64,7 @@ module Twibot
       return false if @options[:pattern] && message.text !~ @options[:pattern] # Pattern check
 
       users = @options[:from] ? @options[:from] : nil
-      users = [users] if users.is_a?(String)
-      return false if users && !users.include?(message.sender) # Check allowed senders
+      return false if users && !users.include?(message.sender.to_s) # Check allowed senders
       true
     end
 

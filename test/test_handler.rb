@@ -110,6 +110,21 @@ class TestHandler < Test::Unit::TestCase
     assert !handler.recognize?(message)
   end
 
+  test "should recognize symbol users" do
+    handler = Twibot::Handler.new "time :city :country", :from => [:cjno, :irbno]
+    message = message "dude", "time oslo norway"
+    assert !handler.recognize?(message)
+
+    message = message(:dude, "time oslo norway")
+    assert !handler.recognize?(message)
+
+    message = message("cjno", "time oslo norway")
+    assert handler.recognize?(message)
+
+    message = message(:cjno, "time oslo norway")
+    assert handler.recognize?(message)
+  end
+
   test "should provide parameters in params hash" do
     handler = Twibot::Handler.new("time :city :country", :from => ["cjno", "irbno"]) do |message, params|
       assert_equal "oslo", params[:city]

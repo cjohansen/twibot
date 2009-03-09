@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), 'test_helper')
+require File.expand_path(File.join(File.dirname(__FILE__), 'test_helper')) unless defined?(Twibot)
 
 class TestHandler < Test::Unit::TestCase
   test "pattern writer should abort on empty values" do
@@ -48,4 +48,73 @@ class TestHandler < Test::Unit::TestCase
     assert_equal :time, handler.instance_eval { @options[:tokens].first }
     assert_equal :hour, handler.instance_eval { @options[:tokens][1] }
   end
+
+  test "should recognize empty pattern" do
+    handler = Twibot::Handler.new
+    message = message "cjno", "A twitter direct message"
+
+    assert handler.recognize?(message)
+  end
+
+  test "should recognize empty pattern and allowed user" do
+    handler = Twibot::Handler.new "", :from => "cjno"
+    message = message "cjno", "A twitter direct message"
+    assert handler.recognize?(message)
+
+    handler = Twibot::Handler.new "", :from => ["cjno", "irbno"]
+    assert handler.recognize?(message)
+  end
+
+  test "should not recognize empty pattern and disallowed user" do
+    handler = Twibot::Handler.new "", :from => "irbno"
+    message = message "cjno", "A twitter direct message"
+    assert !handler.recognize?(message)
+
+    handler = Twibot::Handler.new "", :from => ["irbno", "satan"]
+    assert !handler.recognize?(message)
+  end
+
+  test "should recognize fixed pattern and no user" do
+    handler = Twibot::Handler.new "time"
+    message = message "cjno", "time oslo norway"
+    assert handler.recognize?(message)
+  end
+
+  test "should recognize dynamic pattern and no user" do
+    handler = Twibot::Handler.new "time :city :country"
+    message = message "cjno", "time oslo norway"
+    assert handler.recognize?(message)
+  end
+
+  test "should not recognize dynamic pattern and no user" do
+    handler = Twibot::Handler.new "time :city :country"
+    message = message "cjno", "oslo norway what is the time?"
+    assert !handler.recognize?(message)
+  end
+
+  test "should recognize fixed pattern and user" do
+    handler = Twibot::Handler.new "time", :from => ["cjno", "irbno"]
+    message = message "cjno", "time oslo norway"
+    assert handler.recognize?(message)
+  end
+
+  test "should recognize dynamic pattern and user" do
+    handler = Twibot::Handler.new "time :city :country", :from => ["cjno", "irbno"]
+    message = message "cjno", "time oslo norway"
+    assert handler.recognize?(message)
+  end
+
+  test "should not recognize dynamic pattern and user" do
+    handler = Twibot::Handler.new "time :city :country", :from => ["cjno", "irbno"]
+    message = message "dude", "time oslo norway"
+    assert !handler.recognize?(message)
+  end
+end
+
+def message(from, text)
+  Twitter::Message.new(:id => 1,
+                       :sender => from,
+                       :text => text,
+                       :recipient => "twibot",
+                       :created_at => Time.now)
 end

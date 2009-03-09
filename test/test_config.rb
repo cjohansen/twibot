@@ -1,5 +1,5 @@
+require File.expand_path(File.join(File.dirname(__FILE__), 'test_helper')) unless defined?(Twibot)
 require 'stringio'
-require File.join(File.dirname(__FILE__), 'test_helper')
 
 class TestConfig < Test::Unit::TestCase
   test "default configuration should be a hash" do

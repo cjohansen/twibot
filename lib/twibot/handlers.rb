@@ -57,11 +57,12 @@ module Twibot
     # Determines if this handler is suited to handle an incoming message
     #
     def recognize?(message)
-      return false if @options[:pattern] && message !~ @options[:pattern] # Pattern check
+      return false if @options[:pattern] && message.text !~ @options[:pattern] # Pattern check
 
       users = @options[:from] ? @options[:from] : nil
       users = [users] if users.is_a?(String)
-      return false if users && users.include?(message.from)               # Check allowed senders
+      return false if users && !users.include?(message.sender) # Check allowed senders
+      true
     end
 
     #

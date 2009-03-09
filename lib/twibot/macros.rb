@@ -26,11 +26,6 @@ module Twibot
 
    private
     def add_handler(type, pattern, options, &blk)
-      if pattern.is_a?(Hash)
-        options = pattern
-        pattern = nil
-      end
-
       bot.add_handler(type, Twibot::Handler.new(pattern, options, &blk))
     end
 

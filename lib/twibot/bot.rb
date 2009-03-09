@@ -3,17 +3,26 @@ require 'twitter'
 require 'twitter/console'
 require 'yaml'
 require 'logger'
-require File.join(File.dirname(__FILE__), 'macros')
+require File.expand_path(File.join(File.dirname(__FILE__), 'macros.rb'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'handlers.rb'))
 
 module Twibot
   #
   # Main bot "controller" class
   #
   class Bot
+    include Twibot::Handlers
+
     def initialize(options = nil)
       @config = options || Twibot::Config.default << Twibot::FileConfig.new << Twibot::CliConfig.new
       @twitter = Twitter::Client.new :login => config[:login], :password => config[:password]
       @log = nil
+
+      @processed = {
+        :message => nil,
+        :reply => nil,
+        :tweet => nil
+      }
     rescue Exception => krash
       raise SystemExit.new krash.message
     end
@@ -41,11 +50,51 @@ module Twibot
       step = interval_step
 
       loop do
-        # TODO: Poll twitter service
+        interval = min_interval - sted if receive :messages
+        interval = min_interval - sted if receive :replies
+        interval = min_interval - sted if receive :tweets
+
         log.debug "Sleeping for #{interval}s"
         sleep interval
         interval = interval + step < max ? interval + step : max
       end
+    end
+
+    #
+    # Check for updates
+    #
+    def receive(type)
+      ptype = type
+      meth = :timeline_for
+      arg = :me
+      since = :id
+
+      if [:message, :messages].include?(type) && handlers[:message].length > 0
+        type = :message
+        meth = :messages
+        arg = :received
+        since = :since_id
+      elsif [:reply, :replies].include?(type) && handlers[:reply].length > 0
+        type = :reply
+      elsif [:tweet, :tweets].include?(type) && handlers[:tweet].length > 0
+        type = :tweet
+      else
+        type = nil
+      end
+
+      return false unless type
+
+      options = { since => @processed[type] } if @processed[type]
+      messages = @twitter.send(meth, arg, options)
+
+      messages.each do |message|
+        dispatch(type, message)
+        @processed[type] = message.id
+      end
+
+      num = messages.length
+      log.info "Received #{num} #{num == 1 ? type : ptype}"
+      true
     end
 
     #

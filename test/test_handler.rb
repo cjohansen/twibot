@@ -125,6 +125,12 @@ class TestHandler < Test::Unit::TestCase
     assert handler.recognize?(message)
   end
 
+  test "should accept options as only argument" do
+    handler = Twibot::Handler.new :from => :cjno
+    assert_equal(:cjno, handler.instance_eval { @options[:from] })
+    assert_nil handler.instance_eval { @options[:pattern] }
+  end
+
   test "should provide parameters in params hash" do
     handler = Twibot::Handler.new("time :city :country", :from => ["cjno", "irbno"]) do |message, params|
       assert_equal "oslo", params[:city]
@@ -145,12 +151,4 @@ class TestHandler < Test::Unit::TestCase
       handler.handle(nil, nil)
     end
   end
-end
-
-def message(from, text)
-  Twitter::Message.new(:id => 1,
-                       :sender => from,
-                       :text => text,
-                       :recipient => "twibot",
-                       :created_at => Time.now)
 end

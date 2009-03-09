@@ -1,27 +1,26 @@
 module Twibot
   module Handlers
-    attr_reader :handlers
-
     #
     # Add a handler for this bot
     #
     def add_handler(type, handler)
-      init_handlers
-      @handlers[type] << handler
+      handlers[type] << handler
     end
 
     def dispatch(type, message)
-      init_handlers
-      @handlers[type].each { |handler| handler.dispatch(message) }
+      handlers[type].each { |handler| handler.dispatch(message) }
     end
 
-   private
-    def init_handlers
+    def handlers
       @handlers ||= {
         :message => [],
         :reply => [],
         :tweet => []
       }
+    end
+
+    def handlers=(hash)
+      @handlers = hash
     end
   end
 
@@ -31,6 +30,11 @@ module Twibot
   #
   class Handler
     def initialize(pattern = nil, options = {}, &blk)
+      if pattern.is_a?(Hash)
+        options = pattern
+        pattern = nil
+      end
+
       @options = options
       @options[:from].collect! { |s| s.to_s } if @options[:from] && @options[:from].is_a?(Array)
       @options[:from] = [@options[:from].to_s] if @options[:from] && @options[:from].is_a?(String)

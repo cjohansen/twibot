@@ -1,5 +1,6 @@
 require 'test/unit'
 require 'context'
+require 'mocha'
 require File.join(File.dirname(__FILE__), '../lib/twibot')
 
 module Test::Unit::Assertions
@@ -24,4 +25,12 @@ EOT
       expected.keys.any? { |k| expected[k] != actual[k] }
     end
   end
+end
+
+def message(from, text)
+  Twitter::Message.new(:id => 1,
+                       :sender => from,
+                       :text => text,
+                       :recipient => "twibot",
+                       :created_at => Time.now)
 end

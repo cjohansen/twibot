@@ -48,6 +48,24 @@ class TestBot < Test::Unit::TestCase
     assert_equal Logger::WARN, bot.log.level
   end
 
+  test "receive should return false without handlers" do
+    bot = Twibot::Bot.new(Twibot::Config.new)
+    assert !bot.receive(:messages)
+    assert !bot.receive(:message)
+    assert !bot.receive(:replies)
+    assert !bot.receive(:reply)
+    assert !bot.receive(:tweets)
+    assert !bot.receive(:tweet)
+  end
+
+  test "should receive message" do
+    bot = Twibot::Bot.new(Twibot::Config.new)
+    bot.add_handler(:message, Twibot::Handler.new)
+    bot.any_instance.expects(:messages).with(:received, nil).returns(message("cjno", "Hei der!"))
+  end
+end
+
+class TestBotMacros < Test::Unit::TestCase
   test "should provide configure macro" do
     bot = Twibot::Bot.new Twibot::Config.new
     assert bot.respond_to?(:configure)
@@ -58,5 +76,38 @@ class TestBot < Test::Unit::TestCase
     conf = nil
     bot.configure { |c| conf = c }
     assert conf.is_a?(Twibot::Config)
+  end
+end
+
+class TestBotHandlers < Test::Unit::TestCase
+
+  test "should include handlers" do
+    bot = Twibot::Bot.new(Twibot::Config.new)
+
+    assert_not_nil bot.handlers
+    assert_not_nil bot.handlers[:message]
+    assert_not_nil bot.handlers[:reply]
+    assert_not_nil bot.handlers[:tweet]
+  end
+
+  test "should add handler" do
+    bot = Twibot::Bot.new(Twibot::Config.new)
+    bot.add_handler :message, Twibot::Handler.new
+    assert_equal 1, bot.handlers[:message].length
+
+    bot.add_handler :message, Twibot::Handler.new
+    assert_equal 2, bot.handlers[:message].length
+
+    bot.add_handler :reply, Twibot::Handler.new
+    assert_equal 1, bot.handlers[:reply].length
+
+    bot.add_handler :reply, Twibot::Handler.new
+    assert_equal 2, bot.handlers[:reply].length
+
+    bot.add_handler :tweet, Twibot::Handler.new
+    assert_equal 1, bot.handlers[:tweet].length
+
+    bot.add_handler :tweet, Twibot::Handler.new
+    assert_equal 2, bot.handlers[:tweet].length
   end
 end

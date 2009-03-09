@@ -62,6 +62,9 @@ class TestBot < Test::Unit::TestCase
     bot = Twibot::Bot.new(Twibot::Config.new)
     bot.add_handler(:message, Twibot::Handler.new)
     bot.any_instance.expects(:messages).with(:received, nil).returns(message("cjno", "Hei der!"))
+
+    assert bot.receive(:messages)
+    assert bot.receive(:message)
   end
 end
 

@@ -109,6 +109,27 @@ class TestHandler < Test::Unit::TestCase
     message = message "dude", "time oslo norway"
     assert !handler.recognize?(message)
   end
+
+  test "should provide parameters in params hash" do
+    handler = Twibot::Handler.new("time :city :country", :from => ["cjno", "irbno"]) do |message, params|
+      assert_equal "oslo", params[:city]
+      assert_equal "norway", params[:country]
+    end
+
+    message = message "cjno", "time oslo norway"
+    assert handler.recognize?(message)
+    handler.dispatch(message)
+  end
+
+  test "handle should call constructor block" do
+    handler = Twibot::Handler.new("time :city :country", :from => ["cjno", "irbno"]) do |message, params|
+      raise "Boom!"
+    end
+
+    assert_raise(RuntimeError) do
+      handler.handle(nil, nil)
+    end
+  end
 end
 
 def message(from, text)

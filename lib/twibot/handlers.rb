@@ -70,13 +70,14 @@ module Twibot
     # to +handle+
     #
     def dispatch(message)
+      return unless recognize?(message)
       @params = {}
 
-      matches = message.match(@options[:pattern])
+      matches = message.text.match(@options[:pattern])
       @options[:tokens].each_with_index { |token, i| @params[token] = matches[i+1] }
-      @params[:text] = (matches[tokens.length+1] || "").strip
+      @params[:text] = (matches[@options[:tokens].length+1] || "").strip
 
-      handle(message, @params) if recognize?(message)
+      handle(message, @params)
     end
 
     #

@@ -34,3 +34,10 @@ def message(from, text)
                        :recipient => "twibot",
                        :created_at => Time.now)
 end
+
+def tweet(from, text)
+  Twitter::Status.new(:id => 1,
+                      :text => text,
+                      :user => from,
+                      :created_at => Time.now)
+end

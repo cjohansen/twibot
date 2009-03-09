@@ -80,9 +80,13 @@ module Twibot
       return unless recognize?(message)
       @params = {}
 
-      matches = message.text.match(@options[:pattern])
-      @options[:tokens].each_with_index { |token, i| @params[token] = matches[i+1] }
-      @params[:text] = (matches[@options[:tokens].length+1] || "").strip
+      if @options[:pattern]
+        matches = message.text.match(@options[:pattern])
+        @options[:tokens].each_with_index { |token, i| @params[token] = matches[i+1] }
+        @params[:text] = (matches[@options[:tokens].length+1] || "").strip
+      else
+        @params[:text] = message.text
+      end
 
       handle(message, @params)
     end

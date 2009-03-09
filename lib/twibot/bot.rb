@@ -94,7 +94,7 @@ module Twibot
 
       num = messages.length
       log.info "Received #{num} #{num == 1 ? type : ptype}"
-      true
+      num
     end
 
     #

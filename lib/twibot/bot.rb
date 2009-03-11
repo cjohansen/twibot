@@ -50,9 +50,9 @@ module Twibot
       step = interval_step
 
       loop do
-        interval = min_interval - sted if receive :messages
-        interval = min_interval - sted if receive :replies
-        interval = min_interval - sted if receive :tweets
+        interval = min_interval - step if receive_messages
+        interval = min_interval - step if receive_replies
+        interval = min_interval - step if receive_tweets
 
         log.debug "Sleeping for #{interval}s"
         sleep interval
@@ -61,39 +61,57 @@ module Twibot
     end
 
     #
-    # Check for updates
+    # Receive direct messages
     #
-    def receive(type)
-      ptype = type
-      meth = :timeline_for
-      arg = :me
-      since = :id
+    def receive_messages
+      type = :message
+      return false unless handlers[type].length > 0
 
-      if [:message, :messages].include?(type) && handlers[:message].length > 0
-        type = :message
-        meth = :messages
-        arg = :received
-        since = :since_id
-      elsif [:reply, :replies].include?(type) && handlers[:reply].length > 0
-        type = :reply
-      elsif [:tweet, :tweets].include?(type) && handlers[:tweet].length > 0
-        type = :tweet
-      else
-        type = nil
-      end
+      options = { :since_id => @processed[type] } if @processed[type]
+      dispatch_messages(type, @twitter.messages(:received, options), %w{message messages})
+    end
 
-      return false unless type
+    #
+    # Receive tweets
+    #
+    def receive_tweets
+      type = :tweet
+      return false unless handlers[type].length > 0
 
-      options = { since => @processed[type] } if @processed[type]
-      messages = @twitter.send(meth, arg, options)
+      options = { :id => @processed[type] } if @processed[type]
+      dispatch_messages(type, @twitter.timeline_for(:me, options), %w{tweet tweets})
+    end
 
+    #
+    # Receive tweets that start with @<login>
+    #
+    def receive_replies
+      type = :reply
+      return false unless handlers[type].length > 0
+
+      options = { :id => @processed[type] } if @processed[type]
+      messages = @twitter.timeline_for(:me, options)
+
+      # Pick only messages that start with our name
+      num = dispatch_messages(type, messages.find_all { |t| t.text =~ /^@#{@twitter.login}/ }, %w{reply replies})
+
+      # Avoid picking up messages over again
+      @processed[type] = messages.last.id
+
+      num
+    end
+
+    #
+    # Dispatch a collection of messages
+    #
+    def dispatch_messages(type, messages, labels)
       messages.each do |message|
         dispatch(type, message)
         @processed[type] = message.id
       end
 
       num = messages.length
-      log.info "Received #{num} #{num == 1 ? type : ptype}"
+      log.info "Received #{num} #{num == 1 ? labels[0] : labels[1]}"
       num
     end
 

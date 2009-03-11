@@ -91,23 +91,31 @@ class TestBot < Test::Unit::TestCase
     assert_equal 0, bot.receive_tweets
   end
 
-#   test "should receive reply" do
-#     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
-#     bot.add_handler(:reply, Twibot::Handler.new)
-# #    Twitter::Client.any_instance.expects(:timeline_for).with(:me, nil).returns([tweet("cjno", "Hei der!")])
+  test "should not receive reply when tweet does not start with login" do
+    bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error", :login => "irbno"))
+    bot.add_handler(:reply, Twibot::Handler.new)
+    Twitter::Client.any_instance.expects(:timeline_for).with(:me, nil).returns([tweet("cjno", "Hei der!")])
 
-#     assert_equal 1, bot.receive(:replies)
-#   end
+    assert_equal 0, bot.receive_replies
+  end
 
-#   test "should remember received replies" do
-#     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
-#     bot.add_handler(:reply, Twibot::Handler.new)
-# #    Twitter::Client.any_instance.expects(:timeline_for).with(:me, nil).returns([tweet("cjno", "Hei der!")])
-#     assert_equal 1, bot.receive(:replies)
+  test "should receive reply when tweet starts with login" do
+    bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error", :login => "irbno"))
+    bot.add_handler(:reply, Twibot::Handler.new)
+    Twitter::Client.any_instance.expects(:timeline_for).with(:me, nil).returns([tweet("cjno", "@irbno Hei der!")])
 
-# #    Twitter::Client.any_instance.expects(:timeline_for).with(:me, { :id => 1 }).returns([])
-#     assert_equal 0, bot.receive(:replies)
-#   end
+    assert_equal 1, bot.receive_replies
+  end
+
+  test "should remember received replies" do
+    bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error", :login => "irbno"))
+    bot.add_handler(:reply, Twibot::Handler.new)
+    Twitter::Client.any_instance.expects(:timeline_for).with(:me, nil).returns([tweet("cjno", "@irbno Hei der!")])
+    assert_equal 1, bot.receive_replies
+
+    Twitter::Client.any_instance.expects(:timeline_for).with(:me, { :id => 1 }).returns([])
+    assert_equal 0, bot.receive_replies
+  end
 end
 
 class TestBotMacros < Test::Unit::TestCase

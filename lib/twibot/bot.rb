@@ -93,10 +93,10 @@ module Twibot
       messages = @twitter.timeline_for(:me, options)
 
       # Pick only messages that start with our name
-      num = dispatch_messages(type, messages.find_all { |t| t.text =~ /^@#{@twitter.login}/ }, %w{reply replies})
+      num = dispatch_messages(type, messages.find_all { |t| t.text =~ /^@#{@twitter.send :login}/ }, %w{reply replies})
 
       # Avoid picking up messages over again
-      @processed[type] = messages.last.id
+      @processed[type] = messages.last.id if messages.length > 0
 
       num
     end

@@ -12,6 +12,7 @@ module Twibot
   #
   class Bot
     include Twibot::Handlers
+    attr_reader :twitter
 
     def initialize(options = nil)
       @config = options || Twibot::Config.default << Twibot::FileConfig.new << Twibot::CliConfig.new
@@ -45,18 +46,20 @@ module Twibot
     # Poll Twitter API in a loop and pass on messages and tweets when they appear
     #
     def poll
-      interval = min_interval
       max = max_interval
       step = interval_step
+      interval = min_interval
 
       loop do
-        interval = min_interval - step if receive_messages
-        interval = min_interval - step if receive_replies
-        interval = min_interval - step if receive_tweets
+        message_count = 0
+        message_count += receive_messages || 0
+        message_count += receive_replies || 0
+        message_count += receive_tweets || 0
+
+        interval = message_count > 0 ? min_interval : [interval + step, max].min
 
         log.debug "Sleeping for #{interval}s"
         sleep interval
-        interval = interval + step < max ? interval + step : max
       end
     end
 
@@ -96,8 +99,7 @@ module Twibot
       num = dispatch_messages(type, messages.find_all { |t| t.text =~ /^@#{@twitter.send :login}/ }, %w{reply replies})
 
       # Avoid picking up messages over again
-      @processed[type] = messages.last.id if messages.length > 0
-
+      @processed[type] = messages.first.id if messages.length > 0
       num
     end
 
@@ -105,10 +107,8 @@ module Twibot
     # Dispatch a collection of messages
     #
     def dispatch_messages(type, messages, labels)
-      messages.each do |message|
-        dispatch(type, message)
-        @processed[type] = message.id
-      end
+      messages.each { |message| dispatch(type, message) }
+      @processed[type] = messages.first.id if messages.length > 0
 
       num = messages.length
       log.info "Received #{num} #{num == 1 ? labels[0] : labels[1]}"

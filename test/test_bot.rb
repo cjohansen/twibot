@@ -133,6 +133,11 @@ class TestBotMacros < Test::Unit::TestCase
     handler = add_handler(:message, ":command", :from => :cjno)
     assert handler.is_a?(Twibot::Handler), handler.class
   end
+
+  test "should provide twitter macro" do
+    assert respond_to?(:twitter)
+    assert respond_to?(:client)
+  end
 end
 
 class TestBotHandlers < Test::Unit::TestCase

@@ -20,6 +20,12 @@ module Twibot
       add_handler(:tweet, pattern, options, &blk)
     end
 
+    def twitter
+      bot.twitter
+    end
+
+    alias_method :client, :twitter
+
     def run?
       !@@bot.nil?
     end

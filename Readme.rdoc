@@ -6,6 +6,9 @@ Christian Johansen (http://www.cjohansen.no)
 
 A Ruby microframework for creating Twitter bots, heavily inspired by Sinatra.
 
+NB! Needs a fix to Twitter4r to support since_id URL parameters.
+Will also need deamon support before gem release
+
 == USAGE
 
 === Simple example

@@ -5,6 +5,7 @@ module Twibot
     #
     def add_handler(type, handler)
       handlers[type] << handler
+      handler
     end
 
     def dispatch(type, message)

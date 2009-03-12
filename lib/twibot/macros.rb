@@ -30,7 +30,13 @@ module Twibot
     end
 
     def bot
-      @@bot ||= Twibot::Bot.new
+      return @@bot unless @@bot.nil?
+
+      begin
+        @@bot = Twibot::Bot.new
+      rescue Exception
+        @@bot = Twibot::Bot.new(Twibot::Config.default << Twibot::CliConfig.new)
+      end
     end
   end
 end

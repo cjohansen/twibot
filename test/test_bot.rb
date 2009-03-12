@@ -120,15 +120,18 @@ end
 
 class TestBotMacros < Test::Unit::TestCase
   test "should provide configure macro" do
-    bot = Twibot::Bot.new Twibot::Config.new
-    assert bot.respond_to?(:configure)
+    assert respond_to?(:configure)
   end
 
   test "configure should yield configuration" do
-    bot = Twibot::Bot.new Twibot::Config.new
     conf = nil
-    bot.configure { |c| conf = c }
+    assert_nothing_raised { configure { |c| conf = c } }
     assert conf.is_a?(Twibot::Config)
+  end
+
+  test "should add handler" do
+    handler = add_handler(:message, ":command", :from => :cjno)
+    assert handler.is_a?(Twibot::Handler), handler.class
   end
 end
 

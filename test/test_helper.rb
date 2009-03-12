@@ -29,7 +29,7 @@ end
 
 def message(from, text)
   Twitter::Message.new(:id => 1,
-                       :sender => from,
+                       :sender => Twitter::User.new(:screen_name => from),
                        :text => text,
                        :recipient => "twibot",
                        :created_at => Time.now)
@@ -38,6 +38,6 @@ end
 def tweet(from, text)
   Twitter::Status.new(:id => 1,
                       :text => text,
-                      :user => from,
+                      :user => Twitter::User.new(:screen_name => from),
                       :created_at => Time.now)
 end

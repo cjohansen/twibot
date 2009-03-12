@@ -115,13 +115,7 @@ class TestHandler < Test::Unit::TestCase
     message = message "dude", "time oslo norway"
     assert !handler.recognize?(message)
 
-    message = message(:dude, "time oslo norway")
-    assert !handler.recognize?(message)
-
     message = message("cjno", "time oslo norway")
-    assert handler.recognize?(message)
-
-    message = message(:cjno, "time oslo norway")
     assert handler.recognize?(message)
   end
 

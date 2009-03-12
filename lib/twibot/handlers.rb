@@ -69,7 +69,7 @@ module Twibot
       return false if @options[:pattern] && message.text !~ @options[:pattern] # Pattern check
 
       users = @options[:from] ? @options[:from] : nil
-      return false if users && !users.include?(message.sender.to_s) # Check allowed senders
+      return false if users && !users.include?(message.sender.screen_name) # Check allowed senders
       true
     end
 

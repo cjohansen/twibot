@@ -39,6 +39,14 @@ module Twibot
         exit
       end
 
+      # Make sure we don't process messages and tweets received prior to bot launch
+      messages = @twitter.messages(:received, { :count => 1 })
+      @processed[:message] = messages.first.id if messages.length > 0
+
+      tweets = @twitter.timeline_for(:me, { :count => 1 })
+      @processed[:tweet] = tweets.first.id if tweets.length > 0
+      @processed[:reply] = tweets.first.id if tweets.length > 0
+
       poll
     end
 

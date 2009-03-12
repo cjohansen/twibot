@@ -26,6 +26,12 @@ module Twibot
 
     alias_method :client, :twitter
 
+    def post_tweet(msg)
+      message = msg.respond_to?(:text) ? msg.text : msg
+      puts message
+      client.status(:post, message)
+    end
+
     def run?
       !@@bot.nil?
     end

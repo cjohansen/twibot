@@ -78,15 +78,23 @@ to match incoming tweets and messages:
 You can have several "tweet" blocks (or "message" or "reply"). The first one to
 match an incoming tweet/message will handle it.
 
-== REQUIREMENTS:
+=== Working with the Twitter API
+
+The DSL gives you access to your Twitter client instance through "client" (or "twitter"):
+
+  message do
+    twitter.status :post, "Hello world" # Also: client.status :post, "Hello world"
+  end
+
+== REQUIREMENTS
 
 Twitter4r
 
-== INSTALL:
+== INSTALLATION
 
 gem install twibot
 
-== LICENSE:
+== LICENSE
 
 (The MIT License)
 

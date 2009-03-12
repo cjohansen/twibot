@@ -50,5 +50,9 @@ module Twibot
         @@bot = Twibot::Bot.new(Twibot::Config.default << Twibot::CliConfig.new)
       end
     end
+
+    def bot=(bot)
+      @@bot = bot
+    end
   end
 end

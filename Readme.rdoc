@@ -1,25 +1,82 @@
-twibot
-    by Christian Johansen
-    FIXME http://github.com/cjohansen/twibot/
+=Twibot
+Official URL: http://github.com/cjohansen/twibot/tree/master
+Christian Johansen (http://www.cjohansen.no)
 
-== DESCRIPTION:
+== DESCRIPTION
 
-A small framework for writing Twitter bots
+A Ruby microframework for creating Twitter bots, heavily inspired by Sinatra.
 
-== SYNOPSIS:
+== USAGE
 
-Twibot is inspired by Sinatra:
+=== Simple example
 
   require 'twibot'
 
+  # Receive messages, and tweet them publicly
   #
-  message "time :city" do
-    check_time params[:city]
+  message do |message, params|
+    post_tweet message
   end
 
-  reply do
-
+  # Respond to @replies if they come from the right crowd
+  #
+  reply :from => [:cjno, :irbno] do |message, params|
+    post_tweet "@#{message.sender.screen_name} I agree"
   end
+
+  # Listen in and log tweets
+  #
+  tweet do |message, params|
+    MyApp.log_tweet(message)
+  end
+
+=== Running the bot
+
+To run the bot, simply do:
+
+  ruby bot.rb
+
+=== Configuration
+
+Twibot expects to find a configuration file in ./config/bot.yml. It should contain
+atleast:
+
+login: twitter_login
+password: twitter_password
+
+You can also pass configuration as command line arguments:
+
+  ruby bot.rb --login myaccount
+
+...or configure with Ruby:
+
+  configure do |conf|
+    conf.login = "my_account"
+  do
+
+If you want to eliminate the need for the config file, you can create the bot
+instance yourself:
+
+  bot = Twibot::Bot.new(Twibot::Config.default)
+
+If you want command line arguments you can do:
+
+  bot = Twibot::Bot.new(Twibot::Config.default << Twibot::CliConfig.new)
+
+=== "Routes"
+
+Like Sinatra, and other web app frameworks, Twibot supports "routes": patterns
+to match incoming tweets and messages:
+
+  require 'twibot'
+
+  tweet "time :country :city" do |message,params|
+    time = MyTimeService.lookup(params[:country], params[:city])
+    client.message :post, "Time is #{time} in #{params[:city]}, #{params[:country]}"
+  end
+
+You can have several "tweet" blocks (or "message" or "reply"). The first one to
+match an incoming tweet/message will handle it.
 
 == REQUIREMENTS:
 
@@ -33,7 +90,7 @@ gem install twibot
 
 (The MIT License)
 
-Copyright (c) 2008 Christian Johansen
+Copyright (c) 2009 Christian Johansen
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

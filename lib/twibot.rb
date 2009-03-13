@@ -1,6 +1,8 @@
 require 'time'
 require 'twitter'
 require 'twitter/client'
+require 'yaml'
+require File.join(File.expand_path(File.dirname(__FILE__)), 'daemon')
 require File.join(File.dirname(__FILE__), 'hash')
 
 module Twibot

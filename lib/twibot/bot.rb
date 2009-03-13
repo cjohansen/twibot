@@ -1,7 +1,6 @@
-require 'yaml'
 require 'logger'
-require File.expand_path(File.join(File.dirname(__FILE__), 'macros.rb'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'handlers.rb'))
+require File.join(File.expand_path(File.dirname(__FILE__)), 'macros')
+require File.join(File.expand_path(File.dirname(__FILE__)), 'handlers')
 
 module Twibot
   #
@@ -10,12 +9,15 @@ module Twibot
   class Bot
     include Twibot::Handlers
     attr_reader :twitter
+    attr_writer :prompt
 
-    def initialize(options = nil)
+    def initialize(options = nil, prompt = false)
+      @prompt = prompt
       @conf = nil
       @config = options || Twibot::Config.default << Twibot::FileConfig.new << Twibot::CliConfig.new
       @twitter = Twitter::Client.new :login => config[:login], :password => config[:password]
       @log = nil
+      @abort = false
 
       @processed = {
         :message => nil,
@@ -24,6 +26,10 @@ module Twibot
       }
     rescue Exception => krash
       raise SystemExit.new krash.message
+    end
+
+    def prompt?
+      @prompt
     end
 
     #
@@ -41,7 +47,8 @@ module Twibot
       messages = @twitter.messages(:received, { :count => 1 })
       @processed[:message] = messages.first.id if messages.length > 0
 
-      tweets = @twitter.timeline_for(:me, { :count => 1 })
+      handle_tweets = @handlers[:tweet].length + @handlers[:reply].length > 0
+      tweets = handle_tweets ? @twitter.timeline_for(:me, { :count => 1 }) : []
       @processed[:tweet] = tweets.first.id if tweets.length > 0
       @processed[:reply] = tweets.first.id if tweets.length > 0
 
@@ -56,7 +63,7 @@ module Twibot
       step = interval_step
       interval = min_interval
 
-      loop do
+      while !@abort do
         message_count = 0
         message_count += receive_messages || 0
         message_count += receive_replies || 0
@@ -137,7 +144,7 @@ module Twibot
     #
     def configure
       yield @config
-      # @conf = nil
+      @conf = nil
     end
 
    private
@@ -157,9 +164,8 @@ module Twibot
     def config
       return @conf if @conf
       @conf = @config.to_hash
-      prompt = @conf.key?(:prompt) ? @conf[:promp] : false
 
-      if prompt && (!@conf[:login] || !@conf[:password])
+      if prompt? && (!@conf[:login] || !@conf[:password])
         # No need to rescue LoadError - if the gem is missing then config will
         # be incomplete, something which will be detected elsewhere
         begin
@@ -183,6 +189,8 @@ Unable to continue without login and password. Do one of the following:
       @conf
     end
   end
+
+#  Bot.daemonize
 end
 
 # Expose DSL

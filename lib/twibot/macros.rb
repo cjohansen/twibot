@@ -1,4 +1,10 @@
 module Twibot
+  @@prompt = false
+
+  def self.prompt=(p)
+    @@prompt = f
+  end
+
   module Macros
     def self.included(mod)
       @@bot = nil
@@ -45,16 +51,15 @@ module Twibot
       return @@bot unless @@bot.nil?
 
       begin
-        @@bot = Twibot::Bot.new
+        @@bot = Twibot::Bot.new nil, true
       rescue Exception
-        @@bot = Twibot::Bot.new(Twibot::Config.default << Twibot::CliConfig.new)
+        @@bot = Twibot::Bot.new(Twibot::Config.default << Twibot::CliConfig.new, true)
       end
 
-      @@bot.configure { |config| config.prompt = true }
       @@bot
     end
 
-    def bot=(bot)
+    def self.bot=(bot)
       @@bot = bot
     end
   end

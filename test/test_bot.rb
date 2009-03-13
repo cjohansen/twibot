@@ -124,6 +124,9 @@ class TestBotMacros < Test::Unit::TestCase
   end
 
   test "configure should yield configuration" do
+    Twibot::Macros.bot = Twibot::Bot.new Twibot::Config.default
+    bot.prompt = false
+
     conf = nil
     assert_nothing_raised { configure { |c| conf = c } }
     assert conf.is_a?(Twibot::Config)

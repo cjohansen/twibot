@@ -49,6 +49,9 @@ module Twibot
       rescue Exception
         @@bot = Twibot::Bot.new(Twibot::Config.default << Twibot::CliConfig.new)
       end
+
+      @@bot.configure { |config| config.prompt = true }
+      @@bot
     end
 
     def bot=(bot)

@@ -1,5 +1,3 @@
-require 'twitter'
-require 'twitter/console'
 require 'yaml'
 require 'logger'
 require File.expand_path(File.join(File.dirname(__FILE__), 'macros.rb'))
@@ -14,6 +12,7 @@ module Twibot
     attr_reader :twitter
 
     def initialize(options = nil)
+      @conf = nil
       @config = options || Twibot::Config.default << Twibot::FileConfig.new << Twibot::CliConfig.new
       @twitter = Twitter::Client.new :login => config[:login], :password => config[:password]
       @log = nil
@@ -138,6 +137,7 @@ module Twibot
     #
     def configure
       yield @config
+      # @conf = nil
     end
 
    private
@@ -146,6 +146,7 @@ module Twibot
     #
     def method_missing(name, *args, &block)
       return super unless config.key?(name)
+
       self.class.send(:define_method, name) { config[name] }
       config[name]
     end
@@ -154,7 +155,32 @@ module Twibot
     # Return configuration
     #
     def config
-      @config.to_hash
+      return @conf if @conf
+      @conf = @config.to_hash
+      prompt = @conf.key?(:prompt) ? @conf[:promp] : false
+
+      if prompt && (!@conf[:login] || !@conf[:password])
+        # No need to rescue LoadError - if the gem is missing then config will
+        # be incomplete, something which will be detected elsewhere
+        begin
+          require 'highline'
+          hl = HighLine.new
+
+          @config.login = hl.ask("Twitter login: ") unless @conf[:login]
+          @config.password = hl.ask("Twitter password: ") { |q| q.echo = '*' } unless @conf[:password]
+          @conf = @config.to_hash
+        rescue LoadError
+          raise SystemExit.new <<-HELP
+Unable to continue without login and password. Do one of the following:
+  1) Install the HighLine gem (gem install highline) to be prompted for credentials
+  2) Create a config/bot.yml with login: and password:
+  3) Put a configure { |conf| conf.login = "..." } block in your bot application
+  4) Run bot with --login and --password options
+          HELP
+        end
+      end
+
+      @conf
     end
   end
 end

@@ -26,7 +26,8 @@ module Twibot
       :log_level => "info",
       :log_file => nil,
       :login => nil,
-      :password => nil
+      :password => nil,
+      :prompt => false
     }
 
     def initialize(settings = {})

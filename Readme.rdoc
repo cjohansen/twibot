@@ -7,6 +7,7 @@ Christian Johansen (http://www.cjohansen.no)
 A Ruby microframework for creating Twitter bots, heavily inspired by Sinatra.
 
 NB! Needs a fix to Twitter4r to support since_id URL parameters.
+
 Will also need deamon support before gem release
 
 == USAGE
@@ -44,8 +45,8 @@ To run the bot, simply do:
 Twibot expects to find a configuration file in ./config/bot.yml. It should contain
 atleast:
 
-login: twitter_login
-password: twitter_password
+  login: twitter_login
+  password: twitter_password
 
 You can also pass configuration as command line arguments:
 
@@ -60,7 +61,10 @@ You can also pass configuration as command line arguments:
 If you want to eliminate the need for the config file, you can create the bot
 instance yourself:
 
+  require 'twibot'
   bot = Twibot::Bot.new(Twibot::Config.default)
+
+  # Application here...
 
 If you want command line arguments you can do:
 
@@ -91,9 +95,13 @@ The DSL gives you access to your Twitter client instance through "client" (or "t
 
 == REQUIREMENTS
 
-Twitter4r
+Twitter4r. In order to not hassle the API too much, you'll need a small fix to Twitter4r
+which makes it honour the :since_id parameter. I've got a pending fix for this that I'll
+submit shortly.
 
 == INSTALLATION
+
+Gem will be available on RubyForge shortly. Until then, I wouldn't recommend using it ;)
 
 gem install twibot
 

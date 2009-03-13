@@ -1,4 +1,6 @@
 require 'time'
+require 'twitter'
+require 'twitter/client'
 require File.join(File.dirname(__FILE__), 'hash')
 
 module Twibot
@@ -72,6 +74,12 @@ module Twibot
   end
 
 end  # module Twibot
+
+Twitter::Client.configure do |config|
+  config.application_name = 'Twibot'
+  config.application_version = Twibot.version
+  config.application_url = 'http://github.com/cjohansen/twibot'
+end
 
 Twibot.require_all_libs_relative_to(__FILE__)
 

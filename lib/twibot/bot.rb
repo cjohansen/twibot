@@ -1,4 +1,3 @@
-gem 'twitter4r'
 require 'twitter'
 require 'twitter/console'
 require 'yaml'

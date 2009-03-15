@@ -27,4 +27,4 @@ PROJ.rubyforge.name = 'twibot'
 PROJ.readme_file = 'Readme.rdoc'
 PROJ.rdoc.remote_dir = 'twibot'
 
-depend_on "twitter4r", "0.3.1"
+depend_on "mbbx6spp-twitter4r", "0.3.1"

@@ -27,7 +27,8 @@ module Twibot
       :log_file => nil,
       :login => nil,
       :password => nil,
-      :prompt => false
+      :prompt => false,
+      :daemonize => false
     }
 
     def initialize(settings = {})
@@ -93,6 +94,13 @@ module Twibot
         opts.on("-u", "--login LOGIN", "Twitter login") { |l| @settings[:login] =  l }
         opts.on("-p", "--password PASSWORD", "Twitter password") { |p| @settings[:password] =  p }
         opts.on("-h", "--help", "Show this message") { puts opts; exit }
+
+        begin
+          require 'daemons'
+          opts.on("-d", "--daemonize", "Run as background process") { |t| @settings[:daemonize] = true }
+        rescue LoadError
+        end
+
       end.parse!(args)
     end
   end

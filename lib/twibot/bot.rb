@@ -36,6 +36,8 @@ module Twibot
     # Run application
     #
     def run!
+      run_daemon if config[:daemonize]
+
       puts "Twibot #{Twibot::VERSION} imposing as @#{login}"
 
       trap(:INT) do
@@ -53,6 +55,15 @@ module Twibot
       @processed[:reply] = tweets.first.id if tweets.length > 0
 
       poll
+    end
+
+    #
+    # Runs program as daemon
+    #
+    def run_daemon
+      require 'daemons'
+      Daemons.run "ruby #{$0} #{$*.find_all { |arg| arg !~ /--?d(aemonize)?/ }.join(' ')}"
+      exit
     end
 
     #

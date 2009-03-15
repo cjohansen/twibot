@@ -4,11 +4,8 @@ Christian Johansen (http://www.cjohansen.no)
 
 == DESCRIPTION
 
-A Ruby microframework for creating Twitter bots, heavily inspired by Sinatra.
-
-NB! Needs a fix to Twitter4r to support since_id URL parameters.
-
-Will also need deamon support before gem release
+Twibot (pronounced like "Abbot"), is a Ruby microframework for creating Twitter
+bots, heavily inspired by Sinatra.
 
 == USAGE
 
@@ -42,7 +39,7 @@ To run the bot, simply do:
 
 === Configuration
 
-Twibot expects to find a configuration file in ./config/bot.yml. It should contain
+Twibot looks for a configuration file in ./config/bot.yml. It should contain
 atleast:
 
   login: twitter_login
@@ -58,9 +55,13 @@ You can also pass configuration as command line arguments:
     conf.login = "my_account"
   do
 
-If you want to eliminate the need for the config file, you can create the bot
-instance yourself:
+If you don't specify login and/or password in any of these ways, Twibot will
+prompt you for those.
 
+If you want to change how Twibot is configured, you can setup the bot instance
+manually and give it only the configuration options you want:
+
+  # Create bot only with default configuration
   require 'twibot'
   bot = Twibot::Bot.new(Twibot::Config.default)
 
@@ -68,6 +69,7 @@ instance yourself:
 
 If you want command line arguments you can do:
 
+  require 'twibot'
   bot = Twibot::Bot.new(Twibot::Config.default << Twibot::CliConfig.new)
 
 === "Routes"
@@ -95,15 +97,40 @@ The DSL gives you access to your Twitter client instance through "client" (or "t
 
 == REQUIREMENTS
 
-Twitter4r. In order to not hassle the API too much, you'll need a small fix to Twitter4r
-which makes it honour the :since_id parameter. I've got a pending fix for this that I'll
-submit shortly.
+Twitter4r. You'll need atleast 0.3.1, which is currently only available from GitHub.
+Versions of Twitter4r prior to 0.3.1 does not allow for the since_id parameter to be
+appended to URLs to the REST API. Twibot needs these to only fetch fresh messages
+and tweets.
 
 == INSTALLATION
 
-Gem will be available on RubyForge shortly. Until then, I wouldn't recommend using it ;)
-
 gem install twibot
+
+== Is it Ruby 1.9?
+
+Unfortunately no. Context, used for Twibots tests is not Ruby 1.9 compliant, which
+makes it hard to figure out which part is causing trouble. Will be fixed soon. Fork
+away if you want to help out!
+
+== Polling
+
+Twitter pulled the plug on it's xmpp service last year. This means that Twibot backed
+bots needs to poll the Twitter service to keep up. Twitter has a request limit on 70
+reqs/hour, so you should configure your bot not to make more than that, else it will
+fail. You can ask for your bot account to be put on the whitelist which allows you to
+make 20.000 reqs/hour, and shouldn't be a problem so long as your intentions are good
+(I think).
+
+Twibot polls like this:
+  * Poll messages if any message handlers exist
+  * Poll tweets if any tweet or reply handlers exist
+  * Sleep for +interval+ seconds
+  * Go over again
+
+As long as Twibot finds any messages and/or tweets, the interval stays the same
+(min_interval configuration switch). If nothing was found however, the interval to
+sleep is increased by interval_step configuration option. This happens until it
+reaches max_interval, where it will stay until Twibot finds anything.
 
 == LICENSE
 

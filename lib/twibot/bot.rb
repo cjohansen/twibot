@@ -36,8 +36,6 @@ module Twibot
     # Run application
     #
     def run!
-      run_daemon if config[:daemonize]
-
       puts "Twibot #{Twibot::VERSION} imposing as @#{login}"
 
       trap(:INT) do
@@ -55,15 +53,6 @@ module Twibot
       @processed[:reply] = tweets.first.id if tweets.length > 0
 
       poll
-    end
-
-    #
-    # Runs program as daemon
-    #
-    def run_daemon
-      require 'daemons'
-      Daemons.run "ruby #{$0} #{$*.find_all { |arg| arg !~ /--?d(aemonize)?/ }.join(' ')}"
-      exit
     end
 
     #
@@ -144,7 +133,7 @@ module Twibot
     #
     def log
       return @log if @log
-      os = config[:log_file] ? File.open(config[:log_file], "r") : $stdout
+      os = config[:log_file] ? File.open(config[:log_file], "a") : $stdout
       @log = Logger.new(os)
       @log.level = Logger.const_get(config[:log_level] ? config[:log_level].upcase : "INFO")
       @log
@@ -200,8 +189,6 @@ Unable to continue without login and password. Do one of the following:
       @conf
     end
   end
-
-#  Bot.daemonize
 end
 
 # Expose DSL

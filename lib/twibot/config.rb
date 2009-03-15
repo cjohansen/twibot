@@ -97,7 +97,7 @@ module Twibot
 
         begin
           require 'daemons'
-          opts.on("-d", "--daemonize", "Run as background process") { |t| @settings[:daemonize] = true }
+          opts.on("-d", "--daemonize", "Run as background process (Not implemented)") { |t| @settings[:daemonize] = true }
         rescue LoadError
         end
 

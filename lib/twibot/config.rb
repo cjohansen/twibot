@@ -20,9 +20,9 @@ module Twibot
     attr_reader :settings
 
     DEFAULT = {
-      :min_interval => 5,
+      :min_interval => 30,
       :max_interval => 300,
-      :interval_step => 5,
+      :interval_step => 10,
       :log_level => "info",
       :log_file => nil,
       :login => nil,

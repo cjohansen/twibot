@@ -82,8 +82,8 @@ module Twibot
     def receive_messages
       type = :message
       return false unless handlers[type].length > 0
-
-      options = { :since_id => @processed[type] } if @processed[type]
+      options = {}
+      options[:since_id] = @processed[type] if @processed[type]
       dispatch_messages(type, @twitter.messages(:received, options), %w{message messages})
     end
 
@@ -93,8 +93,8 @@ module Twibot
     def receive_tweets
       type = :tweet
       return false unless handlers[type].length > 0
-
-      options = { :id => @processed[type] } if @processed[type]
+      options = {}
+      options[:since_id] = @processed[type] if @processed[type]
       dispatch_messages(type, @twitter.timeline_for(:me, options), %w{tweet tweets})
     end
 
@@ -104,15 +104,9 @@ module Twibot
     def receive_replies
       type = :reply
       return false unless handlers[type].length > 0
-
-      options = { :id => @processed[type] } if @processed[type]
-      messages = @twitter.timeline_for(:me, options)
-
-      # Pick only messages that start with our name
-      num = dispatch_messages(type, messages.find_all { |t| t.text =~ /^@#{@twitter.send :login}/ }, %w{reply replies})
-
-      # Avoid picking up messages over again
-      @processed[type] = messages.first.id if messages.length > 0
+      options = {}
+      options[:since_id] = @processed[type] if @processed[type]
+      num = dispatch_messages(type, @twitter.status(:replies, options), %w{reply replies})
       num
     end
 
@@ -121,6 +115,7 @@ module Twibot
     #
     def dispatch_messages(type, messages, labels)
       messages.each { |message| dispatch(type, message) }
+      # Avoid picking up messages over again
       @processed[type] = messages.first.id if messages.length > 0
 
       num = messages.length
@@ -176,7 +171,7 @@ module Twibot
           @config.password = hl.ask("Twitter password: ") { |q| q.echo = '*' } unless @conf[:password]
           @conf = @config.to_hash
         rescue LoadError
-          raise SystemExit.new(<<-HELP)
+          raise SystemExit.new <<-HELP
 Unable to continue without login and password. Do one of the following:
   1) Install the HighLine gem (gem install highline) to be prompted for credentials
   2) Create a config/bot.yml with login: and password:

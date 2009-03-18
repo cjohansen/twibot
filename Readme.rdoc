@@ -132,6 +132,10 @@ As long as Twibot finds any messages and/or tweets, the interval stays the same
 sleep is increased by interval_step configuration option. This happens until it
 reaches max_interval, where it will stay until Twibot finds anything.
 
+== CONTRIBUTORS
+
+ * Dan Van Derveer (bug fixes)
+
 == LICENSE
 
 (The MIT License)

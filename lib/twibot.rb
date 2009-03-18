@@ -7,7 +7,7 @@ require File.join(File.dirname(__FILE__), 'hash')
 module Twibot
 
   # :stopdoc:
-  VERSION = '0.1.1'
+  VERSION = '0.1.2'
   LIBPATH = ::File.expand_path(::File.dirname(__FILE__)) + ::File::SEPARATOR
   PATH = ::File.dirname(LIBPATH) + ::File::SEPARATOR
   # :startdoc:

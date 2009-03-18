@@ -1,3 +1,9 @@
+== 0.1.2 / 2009-03-18
+
+* Removed some warnings
+* Applied patch from Dan Van Derveer fixing a few minor bugs related to the
+  options hash sent to Twitter4R
+
 == 0.1.1 / 2009-03-15
 
 * Fixed dependency

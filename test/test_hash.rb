@@ -1,7 +1,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), 'test_helper')) unless defined?(Twibot)
 
 class TestHash < Test::Unit::TestCase
-  test "should convert string keys to symbols" do
+  should "convert string keys to symbols" do
     hash = { "one" => 1, "two" => 2 }
     hash.symbolize_keys!
 
@@ -11,7 +11,7 @@ class TestHash < Test::Unit::TestCase
     assert_nil hash["two"]
   end
 
-  test "should convert string keys and preserve symbol keys" do
+  should "convert string keys and preserve symbol keys" do
     hash = { "one" => 1, :two => 2 }
     hash.symbolize_keys!
 
@@ -21,7 +21,7 @@ class TestHash < Test::Unit::TestCase
     assert_nil hash["two"]
   end
 
-  test "should convert hashes recursively" do
+  should "convert hashes recursively" do
     hash = { "one" => 1, :two => { "three" => 3, "four" => 4 } }
     hash.symbolize_keys!
 

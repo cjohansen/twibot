@@ -2,19 +2,19 @@ require File.expand_path(File.join(File.dirname(__FILE__), 'test_helper')) unles
 require 'fileutils'
 
 class TestBot < Test::Unit::TestCase
-  test "should not raise errors when initialized" do
+  should "not raise errors when initialized" do
     assert_nothing_raised do
       Twibot::Bot.new Twibot::Config.new
     end
   end
 
-  test "should raise errors when initialized without config file" do
+  should "raise errors when initialized without config file" do
     assert_raise SystemExit do
       Twibot::Bot.new
     end
   end
 
-  test "should not raise error on initialize when config file exists" do
+  should "not raise error on initialize when config file exists" do
     if File.exists?("config")
       FileUtils.rm("config/bot.yml")
     else
@@ -30,17 +30,17 @@ class TestBot < Test::Unit::TestCase
     FileUtils.rm_rf("config")
   end
 
-  test "should provide configuration settings as methods" do
+  should "provide configuration settings as methods" do
     bot = Twibot::Bot.new Twibot::Config.new(:max_interval => 3)
     assert_equal 3, bot.max_interval
   end
 
-  test "log should return logger instance" do
+  should "return logger instance" do
     bot = Twibot::Bot.new(Twibot::Config.default << Twibot::Config.new)
     assert bot.log.is_a?(Logger)
   end
 
-  test "logger should respect configured level" do
+  should "respect configured log level" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "info"))
     assert_equal Logger::INFO, bot.log.level
 
@@ -48,14 +48,14 @@ class TestBot < Test::Unit::TestCase
     assert_equal Logger::WARN, bot.log.level
   end
 
-  test "receive should return false without handlers" do
+  should "should return false from receive without handlers" do
     bot = Twibot::Bot.new(Twibot::Config.new)
     assert !bot.receive_messages
     assert !bot.receive_replies
     assert !bot.receive_tweets
   end
 
-  test "should receive message" do
+  should "receive message" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:message, Twibot::Handler.new)
     Twitter::Client.any_instance.expects(:messages).with(:received, {}).returns([message("cjno", "Hei der!")])
@@ -63,7 +63,7 @@ class TestBot < Test::Unit::TestCase
     assert bot.receive_messages
   end
 
-  test "should remember last received message" do
+  should "remember last received message" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:message, Twibot::Handler.new)
     Twitter::Client.any_instance.expects(:messages).with(:received, {}).returns([message("cjno", "Hei der!")])
@@ -73,7 +73,7 @@ class TestBot < Test::Unit::TestCase
     assert_equal 0, bot.receive_messages
   end
 
-  test "should receive tweet" do
+  should "receive tweet" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:tweet, Twibot::Handler.new)
     Twitter::Client.any_instance.expects(:timeline_for).with(:me, {}).returns([tweet("cjno", "Hei der!")])
@@ -81,7 +81,7 @@ class TestBot < Test::Unit::TestCase
     assert_equal 1, bot.receive_tweets
   end
 
-  test "should remember received tweets" do
+  should "remember received tweets" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:tweet, Twibot::Handler.new)
     Twitter::Client.any_instance.expects(:timeline_for).with(:me, {}).returns([tweet("cjno", "Hei der!")])
@@ -91,7 +91,7 @@ class TestBot < Test::Unit::TestCase
     assert_equal 0, bot.receive_tweets
   end
 
-  test "should receive reply when tweet starts with login" do
+  should "receive reply when tweet starts with login" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error", :login => "irbno"))
     bot.add_handler(:reply, Twibot::Handler.new)
     Twitter::Client.any_instance.expects(:status).with(:replies, {}).returns([tweet("cjno", "@irbno Hei der!")])
@@ -99,7 +99,7 @@ class TestBot < Test::Unit::TestCase
     assert_equal 1, bot.receive_replies
   end
 
-  test "should remember received replies" do
+  should "remember received replies" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error", :login => "irbno"))
     bot.add_handler(:reply, Twibot::Handler.new)
     Twitter::Client.any_instance.expects(:status).with(:replies, {}).returns([tweet("cjno", "@irbno Hei der!")])
@@ -111,11 +111,11 @@ class TestBot < Test::Unit::TestCase
 end
 
 class TestBotMacros < Test::Unit::TestCase
-  test "should provide configure macro" do
+  should "provide configure macro" do
     assert respond_to?(:configure)
   end
 
-  test "configure should yield configuration" do
+  should "yield configuration" do
     Twibot::Macros.bot = Twibot::Bot.new Twibot::Config.default
     bot.prompt = false
 
@@ -124,12 +124,15 @@ class TestBotMacros < Test::Unit::TestCase
     assert conf.is_a?(Twibot::Config)
   end
 
-  test "should add handler" do
-    handler = add_handler(:message, ":command", :from => :cjno)
-    assert handler.is_a?(Twibot::Handler), handler.class
-  end
+   should "add handler" do
+     Twibot::Macros.bot = Twibot::Bot.new Twibot::Config.default
+     bot.prompt = false
 
-  test "should provide twitter macro" do
+     handler = add_handler(:message, ":command", :from => :cjno)
+     assert handler.is_a?(Twibot::Handler), handler.class
+   end
+
+  should "provide twitter macro" do
     assert respond_to?(:twitter)
     assert respond_to?(:client)
   end
@@ -137,7 +140,7 @@ end
 
 class TestBotHandlers < Test::Unit::TestCase
 
-  test "should include handlers" do
+  should "include handlers" do
     bot = Twibot::Bot.new(Twibot::Config.new)
 
     assert_not_nil bot.handlers
@@ -146,7 +149,7 @@ class TestBotHandlers < Test::Unit::TestCase
     assert_not_nil bot.handlers[:tweet]
   end
 
-  test "should add handler" do
+  should "add handler" do
     bot = Twibot::Bot.new(Twibot::Config.new)
     bot.add_handler :message, Twibot::Handler.new
     assert_equal 1, bot.handlers[:message].length

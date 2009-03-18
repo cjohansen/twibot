@@ -1,5 +1,5 @@
 require 'test/unit'
-require 'context'
+require 'shoulda'
 require 'mocha'
 require File.join(File.dirname(__FILE__), '../lib/twibot')
 

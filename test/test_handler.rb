@@ -53,14 +53,14 @@ class TestHandler < Test::Unit::TestCase
 
   should "recognize empty pattern" do
     handler = Twibot::Handler.new
-    message = message "cjno", "A twitter direct message"
+    message = twitter_message "cjno", "A twitter direct message"
 
     assert handler.recognize?(message)
   end
 
   should "recognize empty pattern and allowed user" do
     handler = Twibot::Handler.new "", :from => "cjno"
-    message = message "cjno", "A twitter direct message"
+    message = twitter_message "cjno", "A twitter direct message"
     assert handler.recognize?(message)
 
     handler = Twibot::Handler.new "", :from => ["cjno", "irbno"]
@@ -69,7 +69,7 @@ class TestHandler < Test::Unit::TestCase
 
   should "not recognize empty pattern and disallowed user" do
     handler = Twibot::Handler.new "", :from => "irbno"
-    message = message "cjno", "A twitter direct message"
+    message = twitter_message "cjno", "A twitter direct message"
     assert !handler.recognize?(message)
 
     handler = Twibot::Handler.new "", :from => ["irbno", "satan"]
@@ -78,46 +78,46 @@ class TestHandler < Test::Unit::TestCase
 
   should "recognize fixed pattern and no user" do
     handler = Twibot::Handler.new "time"
-    message = message "cjno", "time oslo norway"
+    message = twitter_message "cjno", "time oslo norway"
     assert handler.recognize?(message)
   end
 
   should "recognize dynamic pattern and no user" do
     handler = Twibot::Handler.new "time :city :country"
-    message = message "cjno", "time oslo norway"
+    message = twitter_message "cjno", "time oslo norway"
     assert handler.recognize?(message)
   end
 
   should "not recognize dynamic pattern and no user" do
     handler = Twibot::Handler.new "time :city :country"
-    message = message "cjno", "oslo norway what is the time?"
+    message = twitter_message "cjno", "oslo norway what is the time?"
     assert !handler.recognize?(message)
   end
 
   should "recognize fixed pattern and user" do
     handler = Twibot::Handler.new "time", :from => ["cjno", "irbno"]
-    message = message "cjno", "time oslo norway"
+    message = twitter_message "cjno", "time oslo norway"
     assert handler.recognize?(message)
   end
 
   should "recognize dynamic pattern and user" do
     handler = Twibot::Handler.new "time :city :country", :from => ["cjno", "irbno"]
-    message = message "cjno", "time oslo norway"
+    message = twitter_message "cjno", "time oslo norway"
     assert handler.recognize?(message)
   end
 
   should "not recognize dynamic pattern and user" do
     handler = Twibot::Handler.new "time :city :country", :from => ["cjno", "irbno"]
-    message = message "dude", "time oslo norway"
+    message = twitter_message "dude", "time oslo norway"
     assert !handler.recognize?(message)
   end
 
   should "recognize symbol users" do
     handler = Twibot::Handler.new "time :city :country", :from => [:cjno, :irbno]
-    message = message "dude", "time oslo norway"
+    message = twitter_message "dude", "time oslo norway"
     assert !handler.recognize?(message)
 
-    message = message("cjno", "time oslo norway")
+    message = twitter_message("cjno", "time oslo norway")
     assert handler.recognize?(message)
   end
 
@@ -133,7 +133,7 @@ class TestHandler < Test::Unit::TestCase
       assert_equal "norway", params[:country]
     end
 
-    message = message "cjno", "time oslo norway"
+    message = twitter_message "cjno", "time oslo norway"
     assert handler.recognize?(message)
     handler.dispatch(message)
   end

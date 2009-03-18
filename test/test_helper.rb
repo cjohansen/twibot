@@ -27,7 +27,7 @@ EOT
   end
 end
 
-def message(from, text)
+def twitter_message(from, text)
   Twitter::Message.new(:id => 1,
                        :sender => Twitter::User.new(:screen_name => from),
                        :text => text,

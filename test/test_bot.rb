@@ -58,7 +58,7 @@ class TestBot < Test::Unit::TestCase
   should "receive message" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:message, Twibot::Handler.new)
-    Twitter::Client.any_instance.expects(:messages).with(:received, {}).returns([message("cjno", "Hei der!")])
+    Twitter::Client.any_instance.expects(:messages).with(:received, {}).returns([twitter_message("cjno", "Hei der!")])
 
     assert bot.receive_messages
   end
@@ -66,7 +66,7 @@ class TestBot < Test::Unit::TestCase
   should "remember last received message" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:message, Twibot::Handler.new)
-    Twitter::Client.any_instance.expects(:messages).with(:received, {}).returns([message("cjno", "Hei der!")])
+    Twitter::Client.any_instance.expects(:messages).with(:received, {}).returns([twitter_message("cjno", "Hei der!")])
     assert_equal 1, bot.receive_messages
 
     Twitter::Client.any_instance.expects(:messages).with(:received, { :since_id => 1 }).returns([])

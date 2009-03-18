@@ -1,13 +1,13 @@
-=Twibot
+= Twibot
 Official URL: http://github.com/cjohansen/twibot/tree/master
 Christian Johansen (http://www.cjohansen.no)
 
-== DESCRIPTION
+== Description
 
 Twibot (pronounced like "Abbot"), is a Ruby microframework for creating Twitter
 bots, heavily inspired by Sinatra.
 
-== USAGE
+== Usage
 
 === Simple example
 
@@ -95,14 +95,14 @@ The DSL gives you access to your Twitter client instance through "client" (or "t
     twitter.status :post, "Hello world" # Also: client.status :post, "Hello world"
   end
 
-== REQUIREMENTS
+== Requirements
 
 Twitter4r. You'll need atleast 0.3.1, which is currently only available from GitHub.
 Versions of Twitter4r prior to 0.3.1 does not allow for the since_id parameter to be
 appended to URLs to the REST API. Twibot needs these to only fetch fresh messages
 and tweets.
 
-== INSTALLATION
+== Installation
 
 gem install twibot
 
@@ -132,11 +132,11 @@ As long as Twibot finds any messages and/or tweets, the interval stays the same
 sleep is increased by interval_step configuration option. This happens until it
 reaches max_interval, where it will stay until Twibot finds anything.
 
-== CONTRIBUTORS
+== Contributors
 
- * Dan Van Derveer (bug fixes)
+ * Dan Van Derveer (bug fixes) - http://dan.van.derveer.com/
 
-== LICENSE
+== License
 
 (The MIT License)
 

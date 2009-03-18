@@ -108,9 +108,8 @@ gem install twibot
 
 == Is it Ruby 1.9?
 
-Unfortunately no. Context, used for Twibots tests is not Ruby 1.9 compliant, which
-makes it hard to figure out which part is causing trouble. Will be fixed soon. Fork
-away if you want to help out!
+As of Twibot 0.1.3, yes it is! All tests pass, please give feedback from real world
+usage if you have trouble.
 
 == Polling
 

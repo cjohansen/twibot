@@ -171,13 +171,14 @@ module Twibot
           @config.password = hl.ask("Twitter password: ") { |q| q.echo = '*' } unless @conf[:password]
           @conf = @config.to_hash
         rescue LoadError
-          raise SystemExit.new <<-HELP
+          raise SystemExit.new( <<-HELP
 Unable to continue without login and password. Do one of the following:
   1) Install the HighLine gem (gem install highline) to be prompted for credentials
   2) Create a config/bot.yml with login: and password:
   3) Put a configure { |conf| conf.login = "..." } block in your bot application
   4) Run bot with --login and --password options
           HELP
+          )
         end
       end
 

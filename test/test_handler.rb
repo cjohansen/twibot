@@ -121,6 +121,12 @@ class TestHandler < Test::Unit::TestCase
     assert handler.recognize?(message)
   end
 
+  should "recognize tweets from allowed users" do
+    handler = Twibot::Handler.new :from => [:cjno, :irbno]
+    message = tweet "cjno", "time oslo norway"
+    assert handler.recognize?(message)
+  end
+
   should "accept options as only argument" do
     handler = Twibot::Handler.new :from => :cjno
     assert_equal(:cjno, handler.instance_eval { @options[:from] })

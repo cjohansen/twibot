@@ -134,6 +134,8 @@ reaches max_interval, where it will stay until Twibot finds anything.
 == Contributors
 
  * Dan Van Derveer (bug fixes) - http://dan.van.derveer.com/
+ * Ben Vandgrift (Twitter downtime error handling) - http://neovore.com/
+ * Jens Ohlig (warnings)
 
 == License
 

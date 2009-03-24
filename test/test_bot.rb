@@ -81,6 +81,14 @@ class TestBot < Test::Unit::TestCase
     assert_equal 1, bot.receive_tweets
   end
 
+  should "receive friend tweets if configured" do
+    bot = Twibot::Bot.new(Twibot::Config.new({:log_level => "error", :include_friends => true}))
+    bot.add_handler(:tweet, Twibot::Handler.new)
+    Twitter::Client.any_instance.expects(:timeline_for).with(:friends, {}).returns([tweet("cjno", "Hei der!")])
+
+    assert_equal 1, bot.receive_tweets
+  end
+
   should "remember received tweets" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:tweet, Twibot::Handler.new)

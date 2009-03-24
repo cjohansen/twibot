@@ -48,7 +48,13 @@ module Twibot
       @processed[:message] = messages.first.id if messages.length > 0
 
       handle_tweets = @handlers[:tweet].length + @handlers[:reply].length > 0
-      tweets = handle_tweets ? @twitter.timeline_for(:me, { :count => 1 }) : []
+      tweets = []
+      begin
+        tweets = handle_tweets ? @twitter.timeline_for(:me, { :count => 1 }) : []
+      rescue Twitter::RESTError => e
+        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+	log.error(e.to_s)
+      end
       @processed[:tweet] = tweets.first.id if tweets.length > 0
       @processed[:reply] = tweets.first.id if tweets.length > 0
 
@@ -84,7 +90,13 @@ module Twibot
       return false unless handlers[type].length > 0
       options = {}
       options[:since_id] = @processed[type] if @processed[type]
-      dispatch_messages(type, @twitter.messages(:received, options), %w{message messages})
+      begin
+        dispatch_messages(type, @twitter.messages(:received, options), %w{message messages})
+      rescue Twitter::RESTError => e
+        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+	log.error(e.to_s)
+	0
+      end
     end
 
     #
@@ -95,7 +107,15 @@ module Twibot
       return false unless handlers[type].length > 0
       options = {}
       options[:since_id] = @processed[type] if @processed[type]
-      dispatch_messages(type, @twitter.timeline_for(:me, options), %w{tweet tweets})
+      begin
+        dispatch_messages(type, 
+      	  @twitter.timeline_for(config[:include_friends] ? :friends : :me, 
+	  options), %w{tweet tweets})
+      rescue Twitter::RESTError => e
+        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+	log.error(e.to_s)
+	0
+      end
     end
 
     #
@@ -106,8 +126,14 @@ module Twibot
       return false unless handlers[type].length > 0
       options = {}
       options[:since_id] = @processed[type] if @processed[type]
-      num = dispatch_messages(type, @twitter.status(:replies, options), %w{reply replies})
-      num
+      begin
+        dispatch_messages(type, @twitter.status(:replies, options), %w{reply replies})
+      rescue Twitter::RESTError => e
+        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+	log.error(e.to_s)
+	0
+      end
+      
     end
 
     #

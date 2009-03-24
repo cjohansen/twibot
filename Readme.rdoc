@@ -121,10 +121,10 @@ make 20.000 reqs/hour, and shouldn't be a problem so long as your intentions are
 (I think).
 
 Twibot polls like this:
-  * Poll messages if any message handlers exist
-  * Poll tweets if any tweet or reply handlers exist
-  * Sleep for +interval+ seconds
-  * Go over again
+* Poll messages if any message handlers exist
+* Poll tweets if any tweet or reply handlers exist
+* Sleep for +interval+ seconds
+* Go over again
 
 As long as Twibot finds any messages and/or tweets, the interval stays the same
 (min_interval configuration switch). If nothing was found however, the interval to
@@ -133,9 +133,9 @@ reaches max_interval, where it will stay until Twibot finds anything.
 
 == Contributors
 
- * Dan Van Derveer (bug fixes) - http://dan.van.derveer.com/
- * Ben Vandgrift (Twitter downtime error handling) - http://neovore.com/
- * Jens Ohlig (warnings)
+* Dan Van Derveer (bug fixes) - http://dan.van.derveer.com/
+* Ben Vandgrift (Twitter downtime error handling) - http://neovore.com/
+* Jens Ohlig (warnings)
 
 == License
 

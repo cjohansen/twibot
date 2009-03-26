@@ -126,6 +126,12 @@ class TestHandler < Test::Unit::TestCase
     message = tweet "cjno", "time oslo norway"
     assert handler.recognize?(message)
   end
+  
+  should "recognize tweets from allowed users with capital screen names" do
+    handler = Twibot::Handler.new :from => [:cjno, :irbno]
+    message = tweet "Cjno", "time oslo norway"
+    assert handler.recognize?(message)
+  end
 
   should "accept options as only argument" do
     handler = Twibot::Handler.new :from => :cjno

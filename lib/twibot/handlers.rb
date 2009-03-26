@@ -70,7 +70,7 @@ module Twibot
 
       users = @options[:from] ? @options[:from] : nil
       sender = message.respond_to?(:sender) ? message.sender : message.user
-      return false if users && !users.include?(sender.screen_name) # Check allowed senders
+      return false if users && !users.include?(sender.screen_name.downcase) # Check allowed senders
       true
     end
 

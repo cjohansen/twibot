@@ -1,6 +1,7 @@
 = Twibot
 Official URL: http://github.com/cjohansen/twibot/tree/master
 Christian Johansen (http://www.cjohansen.no)
+Twitter: @cjno
 
 == Description
 
@@ -87,6 +88,16 @@ to match incoming tweets and messages:
 You can have several "tweet" blocks (or "message" or "reply"). The first one to
 match an incoming tweet/message will handle it.
 
+As of the upcoming 0.1.5/0.2.0, Twibot also supports regular expressions as routes:
+
+  require 'twibot'
+
+  tweet /^time ([^\s]*) ([^\s]*)/ do |message, params|
+    # params is an array of matches when using regexp routes
+    time = MyTimeService.lookup(params[0], params[1])
+    client.message :post, "Time is #{time} in #{params[:city]}, #{params[:country]}"
+  end
+
 === Working with the Twitter API
 
 The DSL gives you access to your Twitter client instance through "client" (or "twitter"):
@@ -136,6 +147,7 @@ reaches max_interval, where it will stay until Twibot finds anything.
 * Dan Van Derveer (bug fixes) - http://dan.van.derveer.com/
 * Ben Vandgrift (Twitter downtime error handling) - http://neovore.com/
 * Jens Ohlig (warnings)
+* Wilco van Duinkerken (bug fixes) - http://www.sparkboxx.com/
 
 == License
 

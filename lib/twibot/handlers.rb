@@ -50,6 +50,11 @@ module Twibot
     def pattern=(pattern)
       return if pattern.nil? || pattern == ""
 
+      if pattern.is_a?(Regexp)
+        @options[:pattern] = pattern
+        return
+      end
+
       words = pattern.split.collect { |s| s.strip }          # Get all words in pattern
       @options[:tokens] = words.inject([]) do |sum, token|   # Find all tokens, ie :symbol :like :names
         next sum unless token =~ /^:.*/                      # Don't process regular words
@@ -82,10 +87,12 @@ module Twibot
       return unless recognize?(message)
       @params = {}
 
-      if @options[:pattern]
+      if @options[:pattern] && @options[:tokens]
         matches = message.text.match(@options[:pattern])
         @options[:tokens].each_with_index { |token, i| @params[token] = matches[i+1] }
         @params[:text] = (matches[@options[:tokens].length+1] || "").strip
+      elsif @options[:pattern] && !@options[:tokens]
+        @params = message.text.match(@options[:pattern]).to_a[1..-1] || []
       else
         @params[:text] = message.text
       end

@@ -47,13 +47,13 @@ module Twibot
       messages = @twitter.messages(:received, { :count => 1 })
       @processed[:message] = messages.first.id if messages.length > 0
 
-      handle_tweets = @handlers[:tweet].length + @handlers[:reply].length > 0
+      handle_tweets = !@handlers.nil? && @handlers[:tweet].length + @handlers[:reply].length > 0
       tweets = []
       begin
         tweets = handle_tweets ? @twitter.timeline_for(:me, { :count => 1 }) : []
       rescue Twitter::RESTError => e
         log.error("Failed to connect to Twitter.  It's likely down for a bit:")
-	log.error(e.to_s)
+        log.error(e.to_s)
       end
       @processed[:tweet] = tweets.first.id if tweets.length > 0
       @processed[:reply] = tweets.first.id if tweets.length > 0
@@ -94,8 +94,8 @@ module Twibot
         dispatch_messages(type, @twitter.messages(:received, options), %w{message messages})
       rescue Twitter::RESTError => e
         log.error("Failed to connect to Twitter.  It's likely down for a bit:")
-	log.error(e.to_s)
-	0
+        log.error(e.to_s)
+        0
       end
     end
 
@@ -108,13 +108,13 @@ module Twibot
       options = {}
       options[:since_id] = @processed[type] if @processed[type]
       begin
-        dispatch_messages(type, 
-      	  @twitter.timeline_for(config[:include_friends] ? :friends : :me, 
-	  options), %w{tweet tweets})
+        dispatch_messages(type,
+          @twitter.timeline_for(config[:include_friends] ? :friends : :me,
+          options), %w{tweet tweets})
       rescue Twitter::RESTError => e
         log.error("Failed to connect to Twitter.  It's likely down for a bit:")
-	log.error(e.to_s)
-	0
+        log.error(e.to_s)
+        0
       end
     end
 
@@ -130,10 +130,10 @@ module Twibot
         dispatch_messages(type, @twitter.status(:replies, options), %w{reply replies})
       rescue Twitter::RESTError => e
         log.error("Failed to connect to Twitter.  It's likely down for a bit:")
-	log.error(e.to_s)
-	0
+        log.error(e.to_s)
+        0
       end
-      
+
     end
 
     #

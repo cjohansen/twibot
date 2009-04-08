@@ -116,6 +116,11 @@ class TestBot < Test::Unit::TestCase
     Twitter::Client.any_instance.expects(:status).with(:replies, { :since_id => 1 }).returns([])
     assert_equal 0, bot.receive_replies
   end
+
+  should "use public as default timeline method for tweet 'verb'" do
+    bot = Twibot::Bot.new(Twibot::Config.default)
+    assert_equal :public, bot.instance_eval { @config.to_hash[:timeline_for] }
+  end
 end
 
 class TestBotMacros < Test::Unit::TestCase

@@ -29,7 +29,8 @@ module Twibot
       :password => nil,
       :prompt => false,
       :daemonize => false,
-      :include_friends => false
+      :include_friends => false,
+      :timeline_for => :public
     }
 
     def initialize(settings = {})

@@ -110,9 +110,7 @@ module Twibot
       options = {}
       options[:since_id] = @processed[type] if @processed[type]
       begin
-        dispatch_messages(type,
-          @twitter.timeline_for(config[:include_friends] ? :friends : :me,
-          options), %w{tweet tweets})
+        dispatch_messages(type, @twitter.timeline_for(@config.to_hash[:timeline_for], options), %w{tweet tweets})
       rescue Twitter::RESTError => e
         log.error("Failed to connect to Twitter.  It's likely down for a bit:")
         log.error(e.to_s)

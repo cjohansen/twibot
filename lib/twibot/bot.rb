@@ -49,12 +49,14 @@ module Twibot
 
       handle_tweets = !@handlers.nil? && @handlers[:tweet].length + @handlers[:reply].length > 0
       tweets = []
+
       begin
-        tweets = handle_tweets ? @twitter.timeline_for(@config[:timeline_for], { :count => 1 }) : []
+        tweets = handle_tweets ? @twitter.timeline_for(@config.to_hash[:timeline_for], { :count => 1 }) : []
       rescue Twitter::RESTError => e
         log.error("Failed to connect to Twitter.  It's likely down for a bit:")
         log.error(e.to_s)
       end
+
       @processed[:tweet] = tweets.first.id if tweets.length > 0
       @processed[:reply] = tweets.first.id if tweets.length > 0
 

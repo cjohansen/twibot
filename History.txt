@@ -1,3 +1,11 @@
+== 0.1.5 / 2009-04-12
+
+* Added support for regular expression routes
+* Make timeline_for option configurable, ie in config: timeline_for: :public
+* Fixed bug: Users where unlawfully rejected when their screen name started with
+             a capital letter (Wilco)
+* Fixed bug: Twibot crashed if there were no handlers registered
+
 == 0.1.4 / 2009-03-24
 
 * Removed some warnings

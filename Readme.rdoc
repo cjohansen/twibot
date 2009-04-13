@@ -148,6 +148,7 @@ reaches max_interval, where it will stay until Twibot finds anything.
 * Ben Vandgrift (Twitter downtime error handling) - http://neovore.com/
 * Jens Ohlig (warnings)
 * Wilco van Duinkerken (bug fixes) - http://www.sparkboxx.com/
+* Bodaniel Jeanes (configure block fix) - http://bjeanes.github.com/
 
 == License
 

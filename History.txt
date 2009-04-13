@@ -1,3 +1,8 @@
+== 0.1.6 / 2009-04-13
+
+* Fixed configure block not actually working for username and password (Bodaniel Jeanes)
+* Minor updates in tests
+
 == 0.1.5 / 2009-04-12
 
 * Added support for regular expression routes

@@ -58,7 +58,7 @@ class TestBot < Test::Unit::TestCase
   should "receive message" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:message, Twibot::Handler.new)
-    Twitter::Client.any_instance.expects(:messages).with(:received, {}).returns([twitter_message("cjno", "Hei der!")])
+    bot.twitter.expects(:messages).with(:received, {}).returns([twitter_message("cjno", "Hei der!")])
 
     assert bot.receive_messages
   end
@@ -66,17 +66,17 @@ class TestBot < Test::Unit::TestCase
   should "remember last received message" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:message, Twibot::Handler.new)
-    Twitter::Client.any_instance.expects(:messages).with(:received, {}).returns([twitter_message("cjno", "Hei der!")])
+    bot.twitter.expects(:messages).with(:received, {}).returns([twitter_message("cjno", "Hei der!")])
     assert_equal 1, bot.receive_messages
 
-    Twitter::Client.any_instance.expects(:messages).with(:received, { :since_id => 1 }).returns([])
+    bot.twitter.expects(:messages).with(:received, { :since_id => 1 }).returns([])
     assert_equal 0, bot.receive_messages
   end
 
   should "receive tweet" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:tweet, Twibot::Handler.new)
-    Twitter::Client.any_instance.expects(:timeline_for).with(:me, {}).returns([tweet("cjno", "Hei der!")])
+    bot.twitter.expects(:timeline_for).with(:me, {}).returns([tweet("cjno", "Hei der!")])
 
     assert_equal 1, bot.receive_tweets
   end
@@ -84,7 +84,7 @@ class TestBot < Test::Unit::TestCase
   should "receive friend tweets if configured" do
     bot = Twibot::Bot.new(Twibot::Config.new({:log_level => "error", :include_friends => true}))
     bot.add_handler(:tweet, Twibot::Handler.new)
-    Twitter::Client.any_instance.expects(:timeline_for).with(:friends, {}).returns([tweet("cjno", "Hei der!")])
+    bot.twitter.expects(:timeline_for).with(:friends, {}).returns([tweet("cjno", "Hei der!")])
 
     assert_equal 1, bot.receive_tweets
   end
@@ -92,17 +92,17 @@ class TestBot < Test::Unit::TestCase
   should "remember received tweets" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))
     bot.add_handler(:tweet, Twibot::Handler.new)
-    Twitter::Client.any_instance.expects(:timeline_for).with(:me, {}).returns([tweet("cjno", "Hei der!")])
+    bot.twitter.expects(:timeline_for).with(:me, {}).returns([tweet("cjno", "Hei der!")])
     assert_equal 1, bot.receive_tweets
 
-    Twitter::Client.any_instance.expects(:timeline_for).with(:me, { :since_id => 1 }).returns([])
+    bot.twitter.expects(:timeline_for).with(:me, { :since_id => 1 }).returns([])
     assert_equal 0, bot.receive_tweets
   end
 
   should "receive reply when tweet starts with login" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error", :login => "irbno"))
     bot.add_handler(:reply, Twibot::Handler.new)
-    Twitter::Client.any_instance.expects(:status).with(:replies, {}).returns([tweet("cjno", "@irbno Hei der!")])
+    bot.twitter.expects(:status).with(:replies, {}).returns([tweet("cjno", "@irbno Hei der!")])
 
     assert_equal 1, bot.receive_replies
   end
@@ -110,10 +110,10 @@ class TestBot < Test::Unit::TestCase
   should "remember received replies" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error", :login => "irbno"))
     bot.add_handler(:reply, Twibot::Handler.new)
-    Twitter::Client.any_instance.expects(:status).with(:replies, {}).returns([tweet("cjno", "@irbno Hei der!")])
+    bot.twitter.expects(:status).with(:replies, {}).returns([tweet("cjno", "@irbno Hei der!")])
     assert_equal 1, bot.receive_replies
 
-    Twitter::Client.any_instance.expects(:status).with(:replies, { :since_id => 1 }).returns([])
+    bot.twitter.expects(:status).with(:replies, { :since_id => 1 }).returns([])
     assert_equal 0, bot.receive_replies
   end
 

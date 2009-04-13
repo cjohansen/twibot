@@ -1,7 +1,8 @@
+require 'rubygems'
 require 'test/unit'
 require 'shoulda'
 require 'mocha'
-require File.join(File.dirname(__FILE__), '../lib/twibot')
+require File.join(File.dirname(__FILE__), '..', 'lib', 'twibot')
 
 module Test::Unit::Assertions
   def assert_hashes_equal(expected, actual, message = nil)

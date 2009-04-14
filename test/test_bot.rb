@@ -54,6 +54,22 @@ class TestBot < Test::Unit::TestCase
     assert !bot.receive_replies
     assert !bot.receive_tweets
   end
+  
+  should "not process tweets prior to bot launch if :process option is set to :new" do
+    bot = Twibot::Bot.new(Twibot::Config.new(:process => :new))
+  end
+  
+  should "process all tweets if :process option is set to :all" do
+    bot = Twibot::Bot.new(Twibot::Config.new(:process => :all))
+  end
+  
+  should "process all tweets if :process option is not set" do
+    bot = Twibot::Bot.new(Twibot::Config.new(:process => nil))
+  end
+  
+  should "process all tweets after the ID specified in the :process option" do
+    bot = Twibot::Bot.new(Twibot::Config.new(:process => 77))
+  end
 
   should "receive message" do
     bot = Twibot::Bot.new(Twibot::Config.new(:log_level => "error"))

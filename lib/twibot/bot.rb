@@ -56,7 +56,7 @@ module Twibot
         messages = twitter.messages(:received, { :count => 1 })
         processed[:message] = messages.first.id if messages.length > 0
 
-        handle_tweets = !@handlers.nil? && @handlers[:tweet].length + @handlers[:reply].length > 0
+        handle_tweets = !handlers.nil? && handlers[:tweet].length + handlers[:reply].length > 0
         tweets = []
 
         begin

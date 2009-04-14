@@ -55,20 +55,62 @@ class TestBot < Test::Unit::TestCase
     assert !bot.receive_tweets
   end
   
-  should "not process tweets prior to bot launch if :process option is set to :new" do
-    bot = Twibot::Bot.new(Twibot::Config.new(:process => :new))
-  end
+  context "with the process option specified" do
+    setup do
+      @bot = Twibot::Bot.new(@config = Twibot::Config.default)
+      @bot.stubs(:prompt?).returns(false)
+      @bot.stubs(:twitter).returns(stub)
+      @bot.stubs(:processed).returns(stub)
+      
+      # stop Bot actually starting during tests
+      @bot.stubs(:poll)
+    end
   
-  should "process all tweets if :process option is set to :all" do
-    bot = Twibot::Bot.new(Twibot::Config.new(:process => :all))
-  end
+    should "not process tweets prior to bot launch if :process option is set to :new" do
+      @bot.stubs(:handlers).returns({:tweet => [stub], :reply => []})
+      
+      # Should fetch the latest ID for both messages and tweets
+      @bot.twitter.expects(:messages).with(:received, { :count => 1 }).
+        returns([stub(:id => (message_id = stub))]).once
+      @bot.twitter.expects(:timeline_for).with(:public, { :count => 1 }).
+        returns([stub(:id => (tweet_id = stub))]).once
+      
+      # And set them to the since_id value to be used for future polling
+      @bot.processed.expects(:[]=).with(:message, message_id)
+      @bot.processed.expects(:[]=).with(:tweet,   tweet_id)
+      @bot.processed.expects(:[]=).with(:reply,   tweet_id)
+      
+      @bot.configure { |c| c.process = :new }
+      @bot.run!
+    end
   
-  should "process all tweets if :process option is not set" do
-    bot = Twibot::Bot.new(Twibot::Config.new(:process => nil))
-  end
+    [:all, nil].each do |value|
+      should "process all tweets if :process option is set to #{value.inspect}" do
+        @bot.twitter.expects(:messages).never
+        @bot.twitter.expects(:timeline_for).never
+        
+        # Shout not set the any value for the since_id tweets
+        @bot.processed.expects(:[]=).never
+
+        @bot.configure { |c| c.process = value }
+        @bot.run!
+      end
+    end
   
-  should "process all tweets after the ID specified in the :process option" do
-    bot = Twibot::Bot.new(Twibot::Config.new(:process => 77))
+    should "process all tweets after the ID specified in the :process option" do
+      tweet_id = 12345
+      
+      @bot.processed.expects(:[]=).with(anything, 12345).times(3)
+      
+      @bot.configure { |c| c.process = tweet_id }
+      @bot.run!
+    end
+    
+    should "raise exit when the :process option is not recognized" do
+      @bot.configure { |c| c.process = "something random" }
+      assert_raise(SystemExit) { @bot.run! }
+    end
+    
   end
 
   should "receive message" do

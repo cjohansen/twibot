@@ -47,23 +47,31 @@ module Twibot
         puts "\nAnd it's a wrap. See ya soon!"
         exit
       end
+      
+      case config[:process]
+      when :all, nil
+        # do nothing so it will fetch ALL
+      when :new
+        # Make sure we don't process messages and tweets received prior to bot launch
+        messages = twitter.messages(:received, { :count => 1 })
+        processed[:message] = messages.first.id if messages.length > 0
 
-      # Make sure we don't process messages and tweets received prior to bot launch
-      messages = twitter.messages(:received, { :count => 1 })
-      processed[:message] = messages.first.id if messages.length > 0
+        handle_tweets = !handlers.nil? && handlers[:tweet].length + handlers[:reply].length > 0
+        tweets = []
 
-      handle_tweets = !@handlers.nil? && @handlers[:tweet].length + @handlers[:reply].length > 0
-      tweets = []
+        begin
+          tweets = handle_tweets ? twitter.timeline_for(config[:timeline_for], { :count => 1 }) : []
+        rescue Twitter::RESTError => e
+          log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+          log.error(e.to_s)
+        end
 
-      begin
-        tweets = handle_tweets ? twitter.timeline_for(config[:timeline_for], { :count => 1 }) : []
-      rescue Twitter::RESTError => e
-        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
-        log.error(e.to_s)
+        processed[:tweet] = tweets.first.id if tweets.length > 0
+        processed[:reply] = tweets.first.id if tweets.length > 0
+      when Numeric, /\d+/ # a tweet ID to start from
+        processed[:tweet] = processed[:reply] = processed[:message] = config[:process]
+      else abort "Unknown process option #{config[:process]}, aborting..."
       end
-
-      processed[:tweet] = tweets.first.id if tweets.length > 0
-      processed[:reply] = tweets.first.id if tweets.length > 0
 
       poll
     end

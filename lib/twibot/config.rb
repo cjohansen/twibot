@@ -27,8 +27,11 @@ module Twibot
       :log_file => nil,
       :login => nil,
       :password => nil,
+      :process => :new,
       :prompt => false,
-      :daemonize => false
+      :daemonize => false,
+      :include_friends => false,
+      :timeline_for => :public
     }
 
     def initialize(settings = {})

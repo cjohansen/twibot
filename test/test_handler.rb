@@ -121,6 +121,18 @@ class TestHandler < Test::Unit::TestCase
     assert handler.recognize?(message)
   end
 
+  should "recognize tweets from allowed users" do
+    handler = Twibot::Handler.new :from => [:cjno, :irbno]
+    message = tweet "cjno", "time oslo norway"
+    assert handler.recognize?(message)
+  end
+  
+  should "recognize tweets from allowed users with capital screen names" do
+    handler = Twibot::Handler.new :from => [:cjno, :irbno]
+    message = tweet "Cjno", "time oslo norway"
+    assert handler.recognize?(message)
+  end
+
   should "accept options as only argument" do
     handler = Twibot::Handler.new :from => :cjno
     assert_equal(:cjno, handler.instance_eval { @options[:from] })
@@ -138,7 +150,7 @@ class TestHandler < Test::Unit::TestCase
     handler.dispatch(message)
   end
 
-  should "should call constructor block from handle" do
+  should "call constructor block from handle" do
     handler = Twibot::Handler.new("time :city :country", :from => ["cjno", "irbno"]) do |message, params|
       raise "Boom!"
     end
@@ -146,5 +158,34 @@ class TestHandler < Test::Unit::TestCase
     assert_raise(RuntimeError) do
       handler.handle(nil, nil)
     end
+  end
+
+  should "recognize regular expressions" do
+    handler = Twibot::Handler.new /(?:what|where) is (.*)/i
+    message = twitter_message "dude", "Where is this shit?"
+    assert handler.recognize?(message)
+
+    message = twitter_message "dude", "How is this shit?"
+    assert !handler.recognize?(message)
+  end
+
+  should "recognize regular expressions from specific users" do
+    handler = Twibot::Handler.new /(?:what|where) is (.*)/i, :from => "cjno"
+    message = twitter_message "dude", "Where is this shit?"
+    assert !handler.recognize?(message)
+
+    message = twitter_message "cjno", "Where is this shit?"
+    assert handler.recognize?(message)
+  end
+
+  should "provide parameters as arrays when matching regular expressions" do
+    handler = Twibot::Handler.new(/time ([^\s]*) ([^\s]*)/) do |message, params|
+      assert_equal "oslo", params[0]
+      assert_equal "norway", params[1]
+    end
+
+    message = twitter_message "cjno", "time oslo norway"
+    assert handler.recognize?(message)
+    handler.dispatch(message)
   end
 end

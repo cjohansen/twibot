@@ -15,21 +15,26 @@ module Twibot
       @prompt = prompt
       @conf = nil
       @config = options || Twibot::Config.default << Twibot::FileConfig.new << Twibot::CliConfig.new
-      @twitter = Twitter::Client.new :login => config[:login], :password => config[:password]
       @log = nil
       @abort = false
-
-      @processed = {
-        :message => nil,
-        :reply => nil,
-        :tweet => nil
-      }
     rescue Exception => krash
       raise SystemExit.new(krash.message)
     end
 
     def prompt?
       @prompt
+    end
+
+    def processed
+      @processed ||= {
+        :message => nil,
+        :reply => nil,
+        :tweet => nil
+      }
+    end
+
+    def twitter
+      @twitter ||= Twitter::Client.new :login => config[:login], :password => config[:password]
     end
 
     #
@@ -42,15 +47,31 @@ module Twibot
         puts "\nAnd it's a wrap. See ya soon!"
         exit
       end
+      
+      case config[:process]
+      when :all, nil
+        # do nothing so it will fetch ALL
+      when :new
+        # Make sure we don't process messages and tweets received prior to bot launch
+        messages = twitter.messages(:received, { :count => 1 })
+        processed[:message] = messages.first.id if messages.length > 0
 
-      # Make sure we don't process messages and tweets received prior to bot launch
-      messages = @twitter.messages(:received, { :count => 1 })
-      @processed[:message] = messages.first.id if messages.length > 0
+        handle_tweets = !handlers.nil? && handlers[:tweet].length + handlers[:reply].length > 0
+        tweets = []
 
-      handle_tweets = @handlers[:tweet].length + @handlers[:reply].length > 0
-      tweets = handle_tweets ? @twitter.timeline_for(:me, { :count => 1 }) : []
-      @processed[:tweet] = tweets.first.id if tweets.length > 0
-      @processed[:reply] = tweets.first.id if tweets.length > 0
+        begin
+          tweets = handle_tweets ? twitter.timeline_for(config[:timeline_for], { :count => 1 }) : []
+        rescue Twitter::RESTError => e
+          log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+          log.error(e.to_s)
+        end
+
+        processed[:tweet] = tweets.first.id if tweets.length > 0
+        processed[:reply] = tweets.first.id if tweets.length > 0
+      when Numeric, /\d+/ # a tweet ID to start from
+        processed[:tweet] = processed[:reply] = processed[:message] = config[:process]
+      else abort "Unknown process option #{config[:process]}, aborting..."
+      end
 
       poll
     end
@@ -83,8 +104,14 @@ module Twibot
       type = :message
       return false unless handlers[type].length > 0
       options = {}
-      options[:since_id] = @processed[type] if @processed[type]
-      dispatch_messages(type, @twitter.messages(:received, options), %w{message messages})
+      options[:since_id] = processed[type] if processed[type]
+      begin
+        dispatch_messages(type, twitter.messages(:received, options), %w{message messages})
+      rescue Twitter::RESTError => e
+        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+        log.error(e.to_s)
+        0
+      end
     end
 
     #
@@ -94,8 +121,14 @@ module Twibot
       type = :tweet
       return false unless handlers[type].length > 0
       options = {}
-      options[:since_id] = @processed[type] if @processed[type]
-      dispatch_messages(type, @twitter.timeline_for(:me, options), %w{tweet tweets})
+      options[:since_id] = processed[type] if processed[type]
+      begin
+        dispatch_messages(type, twitter.timeline_for(config.to_hash[:timeline_for] || :public, options), %w{tweet tweets})
+      rescue Twitter::RESTError => e
+        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+        log.error(e.to_s)
+        0
+      end
     end
 
     #
@@ -105,9 +138,15 @@ module Twibot
       type = :reply
       return false unless handlers[type].length > 0
       options = {}
-      options[:since_id] = @processed[type] if @processed[type]
-      num = dispatch_messages(type, @twitter.status(:replies, options), %w{reply replies})
-      num
+      options[:since_id] = processed[type] if processed[type]
+      begin
+        dispatch_messages(type, twitter.status(:replies, options), %w{reply replies})
+      rescue Twitter::RESTError => e
+        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+        log.error(e.to_s)
+        0
+      end
+
     end
 
     #
@@ -116,7 +155,7 @@ module Twibot
     def dispatch_messages(type, messages, labels)
       messages.each { |message| dispatch(type, message) }
       # Avoid picking up messages over again
-      @processed[type] = messages.first.id if messages.length > 0
+      processed[type] = messages.first.id if messages.length > 0
 
       num = messages.length
       log.info "Received #{num} #{num == 1 ? labels[0] : labels[1]}"
@@ -140,6 +179,7 @@ module Twibot
     def configure
       yield @config
       @conf = nil
+      @twitter = nil
     end
 
    private
@@ -171,13 +211,14 @@ module Twibot
           @config.password = hl.ask("Twitter password: ") { |q| q.echo = '*' } unless @conf[:password]
           @conf = @config.to_hash
         rescue LoadError
-          raise SystemExit.new <<-HELP
+          raise SystemExit.new( <<-HELP
 Unable to continue without login and password. Do one of the following:
   1) Install the HighLine gem (gem install highline) to be prompted for credentials
   2) Create a config/bot.yml with login: and password:
   3) Put a configure { |conf| conf.login = "..." } block in your bot application
   4) Run bot with --login and --password options
           HELP
+          )
         end
       end
 

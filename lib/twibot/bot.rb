@@ -47,7 +47,7 @@ module Twibot
         puts "\nAnd it's a wrap. See ya soon!"
         exit
       end
-      
+
       case config[:process]
       when :all, nil
         # do nothing so it will fetch ALL
@@ -62,7 +62,7 @@ module Twibot
         begin
           tweets = handle_tweets ? twitter.timeline_for(config[:timeline_for], { :count => 1 }) : []
         rescue Twitter::RESTError => e
-          log.error("Failed to connect to Twitter.  It's likely down for a bit:")
+          log.error("Failed to connect to Twitter. It's likely down for a bit:")
           log.error(e.to_s)
         end
 
@@ -85,15 +85,26 @@ module Twibot
       interval = min_interval
 
       while !@abort do
-        message_count = 0
-        message_count += receive_messages || 0
-        message_count += receive_replies || 0
-        message_count += receive_tweets || 0
+        begin
+          message_count = 0
+          message_count += receive_messages || 0
+          message_count += receive_replies || 0
+          message_count += receive_tweets || 0
 
-        interval = message_count > 0 ? min_interval : [interval + step, max].min
+          interval = message_count > 0 ? min_interval : [interval + step, max].min
 
-        log.debug "Sleeping for #{interval}s"
-        sleep interval
+          log.debug "Sleeping for #{interval}s"
+          sleep interval
+        rescue Twitter::RESTError => e
+          log.error("Failed to connect to Twitter. It's likely down for a bit:")
+          log.error(e.to_s)
+        rescue Errno::ECONNRESET => e
+          log.error("Connection was reset")
+          log.error(e.to_s)
+        rescue Timeout::Error => e
+          log.error("Timeout")
+          log.error(e.to_s)
+        end
       end
     end
 

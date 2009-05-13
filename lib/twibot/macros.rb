@@ -44,7 +44,7 @@ module Twibot
       reply_to_status_id = status.id
       message = "@#{reply_to_screen_name} #{text}"
       puts message
-      client.status(:post, message, reply_to_status_id)
+      client.status(:reply, message, reply_to_status_id)
     end
     
     def run?

@@ -23,7 +23,7 @@ bots, heavily inspired by Sinatra.
   # Respond to @replies if they come from the right crowd
   #
   reply :from => [:cjno, :irbno] do |message, params|
-    post_tweet "@#{message.sender.screen_name} I agree"
+    post_reply message, "I agree"
   end
 
   # Listen in and log tweets

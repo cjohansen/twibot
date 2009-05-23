@@ -59,11 +59,8 @@ module Twibot
         handle_tweets = !handlers.nil? && handlers[:tweet].length + handlers[:reply].length > 0
         tweets = []
 
-        begin
+        sandbox do
           tweets = handle_tweets ? twitter.timeline_for(config[:timeline_for], { :count => 1 }) : []
-        rescue Twitter::RESTError => e
-          log.error("Failed to connect to Twitter. It's likely down for a bit:")
-          log.error(e.to_s)
         end
 
         processed[:tweet] = tweets.first.id if tweets.length > 0
@@ -85,26 +82,15 @@ module Twibot
       interval = min_interval
 
       while !@abort do
-        begin
-          message_count = 0
-          message_count += receive_messages || 0
-          message_count += receive_replies || 0
-          message_count += receive_tweets || 0
+        message_count = 0
+        message_count += receive_messages || 0
+        message_count += receive_replies || 0
+        message_count += receive_tweets || 0
 
-          interval = message_count > 0 ? min_interval : [interval + step, max].min
+        interval = message_count > 0 ? min_interval : [interval + step, max].min
 
-          log.debug "Sleeping for #{interval}s"
-          sleep interval
-        rescue Twitter::RESTError => e
-          log.error("Failed to connect to Twitter. It's likely down for a bit:")
-          log.error(e.to_s)
-        rescue Errno::ECONNRESET => e
-          log.error("Connection was reset")
-          log.error(e.to_s)
-        rescue Timeout::Error => e
-          log.error("Timeout")
-          log.error(e.to_s)
-        end
+        log.debug "Sleeping for #{interval}s"
+        sleep interval
       end
     end
 
@@ -116,12 +102,9 @@ module Twibot
       return false unless handlers[type].length > 0
       options = {}
       options[:since_id] = processed[type] if processed[type]
-      begin
+
+      sandbox(0) do
         dispatch_messages(type, twitter.messages(:received, options), %w{message messages})
-      rescue Twitter::RESTError => e
-        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
-        log.error(e.to_s)
-        0
       end
     end
 
@@ -133,12 +116,9 @@ module Twibot
       return false unless handlers[type].length > 0
       options = {}
       options[:since_id] = processed[type] if processed[type]
-      begin
+
+      sandbox(0) do
         dispatch_messages(type, twitter.timeline_for(config.to_hash[:timeline_for] || :public, options), %w{tweet tweets})
-      rescue Twitter::RESTError => e
-        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
-        log.error(e.to_s)
-        0
       end
     end
 
@@ -150,14 +130,10 @@ module Twibot
       return false unless handlers[type].length > 0
       options = {}
       options[:since_id] = processed[type] if processed[type]
-      begin
-        dispatch_messages(type, twitter.status(:replies, options), %w{reply replies})
-      rescue Twitter::RESTError => e
-        log.error("Failed to connect to Twitter.  It's likely down for a bit:")
-        log.error(e.to_s)
-        0
-      end
 
+      sandbox(0) do
+        dispatch_messages(type, twitter.status(:replies, options), %w{reply replies})
+      end
     end
 
     #
@@ -234,6 +210,43 @@ Unable to continue without login and password. Do one of the following:
       end
 
       @conf
+    end
+
+    #
+    # Takes a block and executes it in a sandboxed network environment. It
+    # catches and logs most common network connectivity and timeout errors.
+    #
+    # The method takes an optional parameter. If set, this value will be
+    # returned in case an error was raised.
+    #
+    def sandbox(return_value = nil)
+      begin
+        return_value = yield
+      rescue Twitter::RESTError => e
+        log.error("Failed to connect to Twitter. It's likely down for a bit:")
+        log.error(e.to_s)
+      rescue Errno::ECONNRESET => e
+        log.error("Connection was reset")
+        log.error(e.to_s)
+      rescue Timeout::Error => e
+        log.error("Timeout")
+        log.error(e.to_s)
+      rescue EOFError => e
+        log.error(e.to_s)
+      rescue Errno::ETIMEDOUT => e
+        log.error("Timeout")
+        log.error(e.to_s)
+      rescue JSON::ParserError => e
+        log.error("JSON Parsing error")
+        log.error(e.to_s)
+      rescue OpenSSL::SSL::SSLError => e
+        log.error("SSL error")
+        log.error(e.to_s)
+      rescue SystemStackError => e
+        log.error(e.to_s)
+      ensure
+        return return_value
+      end
     end
   end
 end

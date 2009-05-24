@@ -179,6 +179,41 @@ class TestBot < Test::Unit::TestCase
     bot = Twibot::Bot.new(Twibot::Config.default)
     assert_equal :public, bot.instance_eval { @config.to_hash[:timeline_for] }
   end
+
+  context "sandboxed network errors" do
+    should "rescue certain errors" do
+      bot = Twibot::Bot.new(Twibot::Config.default)
+
+      assert_nothing_raised do
+        bot.send(:sandbox) { raise Twitter::RESTError.new }
+        bot.send(:sandbox) { raise Errno::ECONNRESET.new }
+        bot.send(:sandbox) { raise Timeout::Error.new }
+        bot.send(:sandbox) { raise EOFError.new }
+        bot.send(:sandbox) { raise Errno::ETIMEDOUT.new }
+        bot.send(:sandbox) { raise JSON::ParserError.new }
+        bot.send(:sandbox) { raise OpenSSL::SSL::SSLError.new }
+        bot.send(:sandbox) { raise SystemStackError.new }
+      end
+    end
+
+    should "return default value if error is rescued" do
+      bot = Twibot::Bot.new(Twibot::Config.default)
+      assert_equal(42, bot.send(:sandbox, 42) { raise Twitter::RESTError })
+    end
+
+    should "not return default value when no error was raised" do
+      bot = Twibot::Bot.new(Twibot::Config.default)
+      assert_equal(65, bot.send(:sandbox, 42) { 65 })
+    end
+
+    should "not swallow unknown errors" do
+      bot = Twibot::Bot.new(Twibot::Config.default)
+
+      assert_raise StandardError do
+        bot.send(:sandbox) { raise StandardError.new "Oops!" }
+      end
+    end
+  end
 end
 
 class TestBotMacros < Test::Unit::TestCase
@@ -206,6 +241,28 @@ class TestBotMacros < Test::Unit::TestCase
   should "provide twitter macro" do
     assert respond_to?(:twitter)
     assert respond_to?(:client)
+  end
+
+  context "posting replies" do
+    should "work with string messages" do
+      text = "Hey there"
+      status = Twitter::Status.new(:id => 123,
+                                   :text => "Some text",
+                                   :user => Twitter::User.new(:screen_name => "cjno"))
+      client.expects(:status).with(:reply, "@cjno #{text}", 123).returns(true)
+
+      assert post_reply(status, text)
+    end
+
+    should "work with status object messages" do
+      reply = Twitter::Status.new :text => "Hey there"
+      status = Twitter::Status.new(:id => 123,
+                                   :text => "Some text",
+                                   :user => Twitter::User.new(:screen_name => "cjno"))
+      client.expects(:status).with(:reply, "@cjno Hey there", 123).returns(true)
+
+      assert post_reply(status, reply)
+    end
   end
 end
 

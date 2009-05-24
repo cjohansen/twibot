@@ -244,9 +244,9 @@ Unable to continue without login and password. Do one of the following:
         log.error(e.to_s)
       rescue SystemStackError => e
         log.error(e.to_s)
-      ensure
-        return return_value
       end
+
+      return return_value
     end
   end
 end

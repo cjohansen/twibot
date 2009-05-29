@@ -34,7 +34,9 @@ module Twibot
     end
 
     def twitter
-      @twitter ||= Twitter::Client.new :login => config[:login], :password => config[:password]
+      @twitter ||= Twitter::Client.new(:login => config[:login],
+                                       :password => config[:password],
+                                       :host => config[:host])
     end
 
     #

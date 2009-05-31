@@ -20,7 +20,7 @@ module Twibot
     attr_reader :settings
 
     DEFAULT = {
-      :host => "http://twitter.com",
+      :host => "twitter.com",
       :min_interval => 30,
       :max_interval => 300,
       :interval_step => 10,

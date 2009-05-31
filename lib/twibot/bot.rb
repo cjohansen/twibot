@@ -43,7 +43,7 @@ module Twibot
     # Run application
     #
     def run!
-      puts "Twibot #{Twibot::VERSION} imposing as @#{login}"
+      puts "Twibot #{Twibot::VERSION} imposing as @#{login} on #{config[:host]}"
 
       trap(:INT) do
         puts "\nAnd it's a wrap. See ya soon!"
@@ -91,7 +91,7 @@ module Twibot
 
         interval = message_count > 0 ? min_interval : [interval + step, max].min
 
-        log.debug "Sleeping for #{interval}s"
+        log.debug "#{config[:host]} sleeping for #{interval}s"
         sleep interval
       end
     end
@@ -147,7 +147,7 @@ module Twibot
       processed[type] = messages.first.id if messages.length > 0
 
       num = messages.length
-      log.info "Received #{num} #{num == 1 ? labels[0] : labels[1]}"
+      log.info "#{config[:host]}: Received #{num} #{num == 1 ? labels[0] : labels[1]}"
       num
     end
 

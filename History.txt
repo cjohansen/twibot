@@ -1,6 +1,19 @@
+== 0.1.7 / 2009-06-01
+
+* New feature - choose how Twibot processes incoming tweets on startup
+  (process all, process new [old behaviour], or process from a given ID)
+  Bodaniel Jeanes
+* Substantially improved error handling. Now survives all common network
+  stability issues
+* Added a host configuration option. The host name is displayed along all
+  output from Twibot. Currently Twitter4R does nothing with this option,
+  Twibot knowing about it should make it easier to put Twibot/Twitter4R on
+  other services like Laconica instances
+
 == 0.1.6 / 2009-04-13
 
-* Fixed configure block not actually working for username and password (Bodaniel Jeanes)
+* Fixed configure block not actually working for username and password
+  Bodaniel Jeanes
 * Minor updates in tests
 
 == 0.1.5 / 2009-04-12

@@ -315,6 +315,7 @@ module Twibot
     def log
       return @log if @log
       os = config[:log_file] ? File.open(config[:log_file], "a") : $stdout
+      os.sync = !!config[:log_flush]
       @log = Logger.new(os)
       @log.level = Logger.const_get(config[:log_level] ? config[:log_level].upcase : "INFO")
       @log

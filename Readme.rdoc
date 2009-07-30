@@ -156,6 +156,15 @@ If you want command line arguments you can do:
   require 'twibot'
   bot = Twibot::Bot.new(Twibot::Config.default << Twibot::CliConfig.new)
 
+To disable the buffering of the Twibot log file, set the `log_flush` config
+option to `true`:
+
+  configure do |conf|
+    conf.log_file = File.join(DAEMON_ROOT, 'log', 'twitterd.log')
+    conf.log_level = "info"
+    conf.log_flush = true
+  do
+
 === "Routes"
 
 Like Sinatra, and other web app frameworks, Twibot supports "routes": patterns

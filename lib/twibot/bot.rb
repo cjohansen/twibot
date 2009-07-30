@@ -97,17 +97,43 @@ module Twibot
       interval = min_interval
 
       while !@abort do
+        run_hook :before_all
         message_count = 0
         message_count += receive_messages || 0
         message_count += receive_replies || 0
         message_count += receive_tweets || 0
         message_count += receive_searches || 0
         
+        run_hook :after_all, message_count
+        
         interval = message_count > 0 ? min_interval : [interval + step, max].min
         
         log.debug "#{config[:host]} sleeping for #{interval}s"
         sleep interval
       end
+    end
+    
+    
+    #
+    # returns a Hash of all registered hooks
+    #
+    def hooks
+      @hooks ||= {}
+    end
+    
+    #
+    # registers a block to be called at the given +event+
+    #
+    def add_hook(event, &blk)
+      hooks[event.to_sym] = blk
+    end
+    
+    #
+    # calls the hook method for the +event+ if one has
+    # been defined
+    #
+    def run_hook(event, *args)
+      hooks[event.to_sym].call(*args) if hooks[event.to_sym].respond_to? :call
     end
     
     #
@@ -177,7 +203,7 @@ module Twibot
     # Dispatch a collection of messages
     #
     def dispatch_messages(type, messages, labels)
-      messages.each { |message| dispatch(type, message) }
+      messages.each {|message| with_hooks(type) { dispatch(type, message) } }
       # Avoid picking up messages over again
       if type.is_a? Array            # [TODO] (mikedemers) this is an ugly hack
         processed[type.first][type.last] = messages.first.id if messages.length > 0
@@ -188,6 +214,18 @@ module Twibot
       num = messages.length
       log.info "#{config[:host]}: Received #{num} #{num == 1 ? labels[0] : labels[1]}"
       num
+    end
+    
+    #
+    # invokes the given block, running the before and
+    # after hooks for the given type
+    #
+    def with_hooks(type, &blk)
+      event = type.is_a?(Array) ? type.first : type
+      run_hook :"before_#{event}"
+      value = yield
+      run_hook :"after_#{event}"
+      value
     end
     
     #

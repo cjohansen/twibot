@@ -57,6 +57,44 @@ bots, heavily inspired by Sinatra.
   hashtags [:twibot, :ruby, "twitter4r"] do |message, params|
     # do_something
   end
+  
+  # add some set-up code that will be called
+  # before each polling cycle.  :all is the
+  # default, so it can safely be omitted
+  #
+  before :all do
+    MyApp.log("Started polling at #{Time.now}")
+  end
+  
+  # the after hook for the polling cycle gets
+  # passed the number of messages that were
+  # processed
+  #
+  after :all do |message_count|
+    MyApp.log("Finished polling at #{Time.now}.  Got #{message_count} messages.")
+  end
+  
+  # each action has before and after hooks available:
+  #  - message
+  #  - reply
+  #  - search
+  #  - tweet
+  #
+  # there can be only one before and one after callback
+  # registered for a given type.  the callback block
+  # will be called with no arguments.
+  #
+  # Note: hashtag and hashtags are just wrappers around
+  # search and do not have their own hooks.  Use the
+  # search hooks when using hashtag or hashtags.
+  #
+  before :message do
+    MyApp.is_processing_a_message = true
+  end
+  
+  after :message do
+    MyApp.is_processing_a_message = false
+  end
 
 
 === Running the bot

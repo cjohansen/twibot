@@ -36,6 +36,14 @@ module Twibot
       add_handler([:search, query], pattern, options, &blk)
     end
     
+    def after(event=:all, &blk)
+      add_hook :"after_#{event}", &blk
+    end
+    
+    def before(event=:all, &blk)
+      add_hook :"before_#{event}", &blk
+    end
+    
     def twitter
       bot.twitter
     end
@@ -64,6 +72,10 @@ module Twibot
    private
     def add_handler(type, pattern, options, &blk)
       bot.add_handler(type, Twibot::Handler.new(pattern, options, &blk))
+    end
+    
+    def add_hook(hook, &blk)
+      bot.add_hook(hook, &blk)
     end
     
     def bot

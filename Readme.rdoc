@@ -32,7 +32,8 @@ bots, heavily inspired by Sinatra.
     MyApp.log_tweet(message)
   end
   
-  # Search for tweets matching a query
+  # Search for tweets matching a query.  The available search operators
+  # are explained here: <http://search.twitter.com/operators>
   #
   search "twibot" do |message, params|
     # do_something
@@ -163,7 +164,7 @@ option to `true`:
     conf.log_file = File.join(DAEMON_ROOT, 'log', 'twitterd.log')
     conf.log_level = "info"
     conf.log_flush = true
-  do
+  end
 
 === "Routes"
 

@@ -29,7 +29,8 @@ module Twibot
       @processed ||= {
         :message => nil,
         :reply => nil,
-        :tweet => nil
+        :tweet => nil,
+        :search => {}
       }
     end
 
@@ -58,7 +59,8 @@ module Twibot
         messages = twitter.messages(:received, { :count => 1 })
         processed[:message] = messages.first.id if messages.length > 0
 
-        handle_tweets = !handlers.nil? && handlers[:tweet].length + handlers[:reply].length > 0
+        handle_tweets = !handlers.nil? && handlers_for_type(:tweet).length + handlers_for_type(:reply).length + handlers_for_type(:search).keys.length > 0
+        # handle_tweets ||= handlers_for_type(:search).keys.length > 0
         tweets = []
 
         sandbox do
@@ -67,11 +69,22 @@ module Twibot
 
         processed[:tweet] = tweets.first.id if tweets.length > 0
         processed[:reply] = tweets.first.id if tweets.length > 0
+        
+        # for searches, use latest tweet on public timeline
+        #
+        if handle_tweets && config[:timeline_for].to_s != "public"
+          sandbox { tweets = twitter.timeline_for(:public, { :count => 1 }) }
+        end
+        if tweets.length > 0
+          handlers[:search].each_key {|q| processed[:search][q] = tweets.first.id }
+        end
+        
       when Numeric, /\d+/ # a tweet ID to start from
         processed[:tweet] = processed[:reply] = processed[:message] = config[:process]
+        handlers[:search].each_key {|q| processed[:search][q] = config[:process] }
       else abort "Unknown process option #{config[:process]}, aborting..."
       end
-
+      
       poll
     end
 
@@ -88,20 +101,21 @@ module Twibot
         message_count += receive_messages || 0
         message_count += receive_replies || 0
         message_count += receive_tweets || 0
-
+        message_count += receive_searches || 0
+        
         interval = message_count > 0 ? min_interval : [interval + step, max].min
-
+        
         log.debug "#{config[:host]} sleeping for #{interval}s"
         sleep interval
       end
     end
-
+    
     #
     # Receive direct messages
     #
     def receive_messages
       type = :message
-      return false unless handlers[type].length > 0
+      return false unless handlers_for_type(type).length > 0
       options = {}
       options[:since_id] = processed[type] if processed[type]
 
@@ -115,7 +129,7 @@ module Twibot
     #
     def receive_tweets
       type = :tweet
-      return false unless handlers[type].length > 0
+      return false unless handlers_for_type(type).length > 0
       options = {}
       options[:since_id] = processed[type] if processed[type]
 
@@ -129,7 +143,7 @@ module Twibot
     #
     def receive_replies
       type = :reply
-      return false unless handlers[type].length > 0
+      return false unless handlers_for_type(type).length > 0
       options = {}
       options[:since_id] = processed[type] if processed[type]
 
@@ -139,18 +153,43 @@ module Twibot
     end
 
     #
+    # Receive tweets that match the query parameters
+    #
+    def receive_searches
+      result_count = 0
+      
+      handlers_for_type(:search).each_pair do |query, search_handlers|
+        options = { :q => query, :rpp => 100 }
+        [:lang, :geocode].each do |param|
+          options[param] = search_handlers.first.options[param] if search_handlers.first.options[param]
+        end
+        options[:since_id] = processed[:search][query] if processed[:search][query]
+        
+        result_count += sandbox(0) do
+          dispatch_messages([:search, query], twitter.search(options.merge(options)), %w{tweet tweets}.map {|l| "#{l} for \"#{query}\""})
+        end
+      end
+      
+      result_count
+    end
+    
+    #
     # Dispatch a collection of messages
     #
     def dispatch_messages(type, messages, labels)
       messages.each { |message| dispatch(type, message) }
       # Avoid picking up messages over again
-      processed[type] = messages.first.id if messages.length > 0
+      if type.is_a? Array            # [TODO] (mikedemers) this is an ugly hack
+        processed[type.first][type.last] = messages.first.id if messages.length > 0
+      else
+        processed[type] = messages.first.id if messages.length > 0
+      end
 
       num = messages.length
       log.info "#{config[:host]}: Received #{num} #{num == 1 ? labels[0] : labels[1]}"
       num
     end
-
+    
     #
     # Return logger instance
     #

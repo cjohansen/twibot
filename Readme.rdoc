@@ -31,6 +31,33 @@ bots, heavily inspired by Sinatra.
   tweet do |message, params|
     MyApp.log_tweet(message)
   end
+  
+  # Search for tweets matching a query
+  #
+  search "twibot" do |message, params|
+    # do_something
+  end
+  
+  # Search for tweets with a hashtag
+  #  see: <http://twitter.pbworks.com/Hashtags>
+  #
+  # Note: hashtag is just a convenience wrapper
+  # around search.  It will invoke the search
+  # before and after filters.
+  #
+  hashtag "twibot" do |message, params|
+    # do_something
+  end
+  
+  # Search for tweets with one of a number of hashtags
+  #  see: <http://twitter.pbworks.com/Hashtags>
+  #
+  # Note: hashtags is just an alias to hashtag
+  #
+  hashtags [:twibot, :ruby, "twitter4r"] do |message, params|
+    # do_something
+  end
+
 
 === Running the bot
 

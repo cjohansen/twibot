@@ -26,6 +26,16 @@ module Twibot
       add_handler(:tweet, pattern, options, &blk)
     end
 
+    def hashtag(tag_or_tags, pattern = nil, options = {}, &blk)
+      query = [tag_or_tags].flatten.map {|ht| ht.to_s[0] == ?# ? ht.to_s : "##{ht}"}.join(" OR ")
+      add_handler([:search, query], pattern, options, &blk)
+    end
+    alias_method :hashtags, :hashtag
+    
+    def search(query, pattern = nil, options = {}, &blk)
+      add_handler([:search, query], pattern, options, &blk)
+    end
+    
     def twitter
       bot.twitter
     end
@@ -55,7 +65,7 @@ module Twibot
     def add_handler(type, pattern, options, &blk)
       bot.add_handler(type, Twibot::Handler.new(pattern, options, &blk))
     end
-
+    
     def bot
       return @@bot unless @@bot.nil?
 

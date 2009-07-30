@@ -4,19 +4,28 @@ module Twibot
     # Add a handler for this bot
     #
     def add_handler(type, handler)
-      handlers[type] << handler
+      handlers_for_type(type) << handler
       handler
     end
-
+    
+    def handlers_for_type(type)
+      if type.is_a? Array
+        handlers[type.first][type.last] ||= []
+      else
+        handlers[type]
+      end
+    end
+    
     def dispatch(type, message)
-      handlers[type].each { |handler| handler.dispatch(message) }
+      handlers_for_type(type).each { |handler| handler.dispatch(message) }
     end
 
     def handlers
       @handlers ||= {
         :message => [],
         :reply => [],
-        :tweet => []
+        :tweet => [],
+        :search => {}
       }
     end
 
@@ -30,6 +39,7 @@ module Twibot
   # at reply.
   #
   class Handler
+    attr_reader :options
     def initialize(pattern = nil, options = {}, &blk)
       if pattern.is_a?(Hash)
         options = pattern

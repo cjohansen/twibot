@@ -26,6 +26,10 @@ module Twibot
       add_handler(:tweet, pattern, options, &blk)
     end
 
+    def follower(&blk)
+      add_handler(:follower, nil, {}, &blk)
+    end
+    
     def hashtag(tag_or_tags, pattern = nil, options = {}, &blk)
       query = [tag_or_tags].flatten.map {|ht| ht.to_s[0] == ?# ? ht.to_s : "##{ht}"}.join(" OR ")
       add_handler([:search, query], pattern, options, &blk)

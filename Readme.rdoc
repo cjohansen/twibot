@@ -58,6 +58,19 @@ bots, heavily inspired by Sinatra.
     # do_something
   end
   
+  # Process any new followers.  user_id will be
+  # the user's Numeric id and params will always
+  # be an empty Hash.
+  #
+  # add_friend!(id) is a convenience wrapper around the
+  # twitter4r friendship method.  remove_friend!(id)
+  # is also available.
+  #
+  follower do |user_id, params|
+    # keep out the riff-raff...
+    bot.add_friend!(user_id) unless user_id == 890631
+  end
+  
   # add some set-up code that will be called
   # before each polling cycle.  :all is the
   # default, so it can safely be omitted
@@ -75,6 +88,7 @@ bots, heavily inspired by Sinatra.
   end
   
   # each action has before and after hooks available:
+  #  - follower
   #  - message
   #  - reply
   #  - search
@@ -94,6 +108,10 @@ bots, heavily inspired by Sinatra.
   
   after :message do
     MyApp.is_processing_a_message = false
+  end
+  
+  after :follower do
+    MyApp.log("I have another follower!")
   end
 
 

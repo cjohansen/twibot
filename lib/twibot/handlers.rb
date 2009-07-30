@@ -25,6 +25,7 @@ module Twibot
         :message => [],
         :reply => [],
         :tweet => [],
+        :follower => [],
         :search => {}
       }
     end

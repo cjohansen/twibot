@@ -79,11 +79,15 @@ module Twibot
           handlers[:search].each_key {|q| processed[:search][q] = tweets.first.id }
         end
         
+        load_followers
+        
       when Numeric, /\d+/ # a tweet ID to start from
         processed[:tweet] = processed[:reply] = processed[:message] = config[:process]
         handlers[:search].each_key {|q| processed[:search][q] = config[:process] }
       else abort "Unknown process option #{config[:process]}, aborting..."
       end
+      
+      load_friends unless handlers_for_type(:follower).empty?
       
       poll
     end
@@ -104,12 +108,74 @@ module Twibot
         message_count += receive_tweets || 0
         message_count += receive_searches || 0
         
+        receive_followers
+        
         run_hook :after_all, message_count
         
         interval = message_count > 0 ? min_interval : [interval + step, max].min
         
         log.debug "#{config[:host]} sleeping for #{interval}s"
         sleep interval
+      end
+    end
+    
+    
+    def friend_ids
+      @friend_ids ||= {}
+    end
+    
+    def add_friend!(user_or_id, only_local=false)
+      id = id_for_user_or_id(user_or_id)
+      sandbox(0) { twitter.friend(:add, id) } unless only_local
+      friend_ids[id] = true
+    end
+    
+    def remove_friend!(user_or_id, only_local=false)
+      id = id_for_user_or_id(user_or_id)
+      sandbox(0) { twitter.friend(:remove, id) } unless only_local
+      friend_ids[id] = false
+    end
+    
+    def is_friend?(user_or_id)
+      !!friend_ids[id_for_user_or_id(user_or_id)]
+    end
+    
+    def follower_ids
+      @follower_ids ||= {}
+    end
+    
+    def add_follower!(user_or_id)
+      follower_ids[id_for_user_or_id(user_or_id)] = true
+    end
+    
+    def remove_follower!(user_or_id)
+      follower_ids[id_for_user_or_id(user_or_id)] = false
+    end
+    
+    def is_follower?(user_or_id)
+      !!follower_ids[id_for_user_or_id(user_or_id)]
+    end
+    
+    def id_for_user_or_id(user_or_id)
+      (user_or_id.respond_to?(:screen_name) ? user_or_id.id : user_or_id).to_i
+    end
+    
+    
+    #
+    # retrieve a list of friend ids and store it as a Hash
+    #
+    def load_friends
+      sandbox(0) do
+        twitter.graph(:friends, config[:login]).each {|id| add_friend!(id, true) }
+      end
+    end
+    
+    #
+    # retrieve a list of friend ids and store it as a Hash
+    #
+    def load_followers
+      sandbox(0) do
+        twitter.graph(:followers, config[:login]).each {|id| add_follower!(id) }
       end
     end
     
@@ -197,6 +263,21 @@ module Twibot
       end
       
       result_count
+    end
+    
+    #
+    # Receive any new followers
+    #
+    def receive_followers
+      newbies = []
+      sandbox(0) do
+        twitter.graph(:followers, config[:login]).each {|id| newbies << id unless is_friend?(id) or is_follower?(id) }
+        newbies.each do |id|
+          add_follower!(id)
+          with_hooks(:follower) { handlers_for_type(:follower).each {|h| h.handle(id, {}) } }
+        end
+      end
+      log.info "#{config[:host]}: Received #{newbies.size} new #{newbies.size == 1 ? 'follower' : 'followers'}"
     end
     
     #

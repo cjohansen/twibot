@@ -7,15 +7,15 @@ module Twibot
       handlers_for_type(type) << handler
       handler
     end
-    
+
     def handlers_for_type(type)
       if type.is_a? Array
         handlers[type.first][type.last] ||= []
       else
-        handlers[type]
+        handlers[type] || {}
       end
     end
-    
+
     def dispatch(type, message)
       handlers_for_type(type).each { |handler| handler.dispatch(message) }
     end

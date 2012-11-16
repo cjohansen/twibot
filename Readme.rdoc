@@ -1,3 +1,9 @@
+= IMPORTANT
+
+THIS PROJECT IS DEAD. IT DOES NOT WORK. THE CODE IS KEPT HERE ONLY FOR HISTORIC PURPOSES.
+
+DO NOT USE THIS PROJECT.
+
 = Twibot
 Official URL: http://github.com/cjohansen/twibot/tree/master
 Christian Johansen (http://www.cjohansen.no)
